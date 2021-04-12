@@ -36,6 +36,16 @@ static InterpretResult run() {
 // looks up the corresponding Value in the chunk's constant table.
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
 
+// Pops the top two values off of the stack, applies op, and pushes the result onto the stack.
+// The do/while loop here is a silly C hack for allowing macros to be used in any scope (in/out
+// of a block and with/without a semi at the end).
+#define BINARY_OP(op) \
+  do {\
+    double b = pop(); \
+    double a = pop(); \
+    push(a op b); \
+  } while (false)
+
   for(;;) {
 #ifdef DEBUG_TRACE_EXECUTION
     printf("          ");
@@ -43,8 +53,8 @@ static InterpretResult run() {
       printf("[ ");
       printValue(*slot);
       printf(" ]");
-      printf("\n");
     }
+    printf("\n");
 
     // convert ip back to relative offset from beginning of bytecode and then disassemble
     // the instruction that begins at that byte.
@@ -58,6 +68,11 @@ static InterpretResult run() {
         push(constant);
         break;
       }
+      case OP_ADD: BINARY_OP(+); break;
+      case OP_SUBTRACT: BINARY_OP(-); break;
+      case OP_MULTIPLY: BINARY_OP(*); break;
+      case OP_DIVIDE: BINARY_OP(/); break;
+      case OP_NEGATE: push(-pop()); break;
       case OP_RETURN: {
         printValue(pop());
         printf("\n");
@@ -68,6 +83,7 @@ static InterpretResult run() {
 
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef BINARY_OP
 }
 
 InterpretResult interpret(Chunk* chunk) {
