@@ -6,7 +6,12 @@
 
 // OpCode is the kind of instruction.
 typedef enum {
-  OP_CONSTANT, // produces a constant
+  OP_CONSTANT, // produces a constant. ex: `2.1`
+  OP_ADD, // ex: `1 + 2`
+  OP_SUBTRACT, // ex: `12 - 4`
+  OP_MULTIPLY, // ex: `34 * 9`
+  OP_DIVIDE, // ex: `20 / 2`
+  OP_NEGATE, // ex: `-1`
   OP_RETURN, // return from the current function
 } OpCode;
 
