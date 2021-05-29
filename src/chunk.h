@@ -14,6 +14,7 @@ typedef enum {
   OP_SUBTRACT, // ex: `12 - 4`
   OP_MULTIPLY, // ex: `34 * 9`
   OP_DIVIDE, // ex: `20 / 2`
+  OP_NOT, // unary not: `!true`
   OP_NEGATE, // ex: `-1`
   OP_RETURN, // return from the current function
 } OpCode;
