@@ -10,6 +10,9 @@ typedef enum {
   OP_NIL,
   OP_TRUE,
   OP_FALSE,
+  OP_EQUAL, // comparison: `1 == 1`
+  OP_GREATER, // comparison: `2 > 1`
+  OP_LESS, // comparison: `1 < 2`
   OP_ADD, // ex: `1 + 2`
   OP_SUBTRACT, // ex: `12 - 4`
   OP_MULTIPLY, // ex: `34 * 9`
