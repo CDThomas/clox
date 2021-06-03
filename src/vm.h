@@ -16,6 +16,8 @@ typedef struct {
   // Direct pointer to top of the stack. Points just past the element containing the top value (where the
   // next value to be pushed will go).
   Value* stackTop;
+  // Intrusive linked list of all objects that have been allocated.
+  Obj* objects;
 } VM;
 
 typedef enum {
@@ -23,6 +25,8 @@ typedef enum {
   INTERPRET_COMPILE_ERROR,
   INTERPRET_RUNTIME_ERROR
 } InterpretResult;
+
+extern VM vm;
 
 void initVM();
 void freeVM();
