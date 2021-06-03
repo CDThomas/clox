@@ -17,6 +17,9 @@ typedef enum {
 
 struct Obj {
   ObjType type;
+  // Pointer to the object that was allocated before this one. Used for freeing all objects when
+  // a user's program completes.
+  struct Obj* next;
 };
 
 struct ObjString {
