@@ -1,8 +1,7 @@
 import os
 import subprocess
 
-dirname = os.path.dirname(__file__)
-filename = os.path.join(dirname, '../test/bool/equality.lox')
+test_dir = os.path.join(os.path.dirname(__file__), "../test")
 
 # start with assertions for single lines without errors
 
@@ -12,7 +11,10 @@ def pluralize(word, count):
   else:
     return word + "s"
 
-def do_test(line, line_number):
+def should_test_line(line):
+  return not line.strip().startswith("//") and "expect:" in line
+
+def test_line(line, line_number):
   # Remove print statements until these are supported by the interpreter
   line = line.replace("print", "")
 
@@ -31,19 +33,30 @@ def do_test(line, line_number):
   passed = actual == expected
 
   if not passed:
+    print("\n")
     print(f"Failure at line {line_number + 1}:")
-    print(line)
+    print(f"Actual: {actual}")
+    print(f"Expected: {expected}")
+    print(f"Line: {line}")
 
   return passed
 
-with open(filename, 'r') as reader:
-  results = [do_test(line, line_number)
-             for line_number, line
-             in enumerate(reader) if "expect:" in line]
+def test_file(file):
+  with open(file, 'r') as reader:
+    results = [test_line(line, line_number)
+              for line_number, line
+              in enumerate(reader) if should_test_line(line)]
 
-  if all(results):
-    print("All tests passed!")
-  else:
-    failed_count = results.count(False)
+    if all(results):
+      print("All tests passed!")
+    else:
+      failed_count = results.count(False)
 
-    print(str(failed_count) + " " + pluralize("test", failed_count) + " failed.")
+      print(str(failed_count) + " " + pluralize("test", failed_count) + " failed.")
+
+for dirpath, dirnames, files in os.walk(test_dir):
+  for file in files:
+    filepath = os.path.join(dirpath, file)
+    print(f"Running tests in {os.path.relpath(filepath)} ...")
+    test_file(filepath)
+    print("\n")
