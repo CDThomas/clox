@@ -3,7 +3,11 @@ import subprocess
 
 test_dir = os.path.join(os.path.dirname(__file__), "../test")
 
-# start with assertions for single lines without errors
+# TODO:
+# - Handle print statements rather than interpreting each line
+# - Support expecting errors
+# - Support only running certain tests
+# - Support choosing an interpreter
 
 def pluralize(word, count):
   if count == 1:
