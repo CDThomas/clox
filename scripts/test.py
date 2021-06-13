@@ -1,5 +1,6 @@
 import os
 import subprocess
+from collections import namedtuple
 
 test_dir = os.path.join(os.path.dirname(__file__), "../test")
 
@@ -9,16 +10,22 @@ test_dir = os.path.join(os.path.dirname(__file__), "../test")
 # - Support only running certain tests
 # - Support choosing an interpreter
 
+Suite = namedtuple("Suite", "path, tests")
+Test = namedtuple("Test", "expected, actual, line_number, did_pass")
+
+# (word: str, count: int) -> str
 def pluralize(word, count):
   if count == 1:
     return word
   else:
     return word + "s"
 
+# (line: str) -> bool
 def should_test_line(line):
   return not line.strip().startswith("//") and "expect:" in line
 
-def test_line(line, line_number):
+# (line: str, line_number: int) -> Test
+def run_test(line, line_number):
   # Remove print statements until these are supported by the interpreter
   line = line.replace("print", "")
 
@@ -34,33 +41,32 @@ def test_line(line, line_number):
   )
   actual = result.stdout.split("\n")[-3]
 
-  passed = actual == expected
+  did_pass = actual == expected
 
-  if not passed:
-    print("\n")
-    print(f"Failure at line {line_number + 1}:")
-    print(f"Actual: {actual}")
-    print(f"Expected: {expected}")
-    print(f"Line: {line}")
+  return Test(expected=expected, actual=actual, line_number=line_number, did_pass=did_pass)
 
-  return passed
-
-def test_file(file):
-  with open(file, 'r') as reader:
-    results = [test_line(line, line_number)
+# path -> Suite
+def run_suite(path):
+  with open(path, 'r') as reader:
+    tests = [run_test(line, line_number)
               for line_number, line
               in enumerate(reader) if should_test_line(line)]
 
-    if all(results):
-      print("All tests passed!")
-    else:
-      failed_count = results.count(False)
+    return Suite(path=path, tests=tests)
 
-      print(str(failed_count) + " " + pluralize("test", failed_count) + " failed.")
+def print_results(suites):
+  for suite in suites:
+    failures = [test for test in suite.tests if not test.did_pass]
+    prefix = "❌" if failures else "✅"
 
+    print(f"{prefix} {os.path.relpath(suite.path)}")
+
+    for failure in failures:
+      print(f"  Failure at line {failure.line_number + 1}: expected {failure.expected}, got {failure.actual}")
+      print("\n")
+
+
+# run_suites
 for dirpath, dirnames, files in os.walk(test_dir):
-  for file in files:
-    filepath = os.path.join(dirpath, file)
-    print(f"Running tests in {os.path.relpath(filepath)} ...")
-    test_file(filepath)
-    print("\n")
+  suites = [run_suite(os.path.join(dirpath, file)) for file in files]
+  print_results(suites)
