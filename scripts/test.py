@@ -11,8 +11,8 @@ import collections
 
 # Constants
 TEST_DIR = os.path.join(os.path.dirname(__file__), "../test")
-
 RESET = "\u001b[0m"
+REVERSED = "\u001b[7m"
 BOLD = "\u001b[1m"
 RED = "\u001b[31;1m"
 GREEN = "\u001b[32;1m"
@@ -33,6 +33,12 @@ def red(text):
 
 def bold(text):
   return color(text, BOLD)
+
+def green_background(text):
+  return color(text, GREEN + REVERSED)
+
+def red_background(text):
+  return color(text, RED + REVERSED)
 
 # (word: str, count: int) -> str
 def pluralize(word, count):
@@ -98,22 +104,34 @@ def summarize(suites):
 
   return suite_summary, test_summary
 
+def summary_line(summary, label):
+  label_text = bold(f"{label}:")
+  passed_text = green(f"{summary.passed} passed")
+  failed_text = red(f"{summary.failed} failed")
+  total_text = f"{summary.total} total"
+
+  if summary.failed:
+    return f"{label_text} {passed_text}, {failed_text}, {total_text}"
+  else:
+    return f"{label_text} {passed_text}, {total_text}"
+
+
 # [Suite] -> None
 def print_results(suites):
   for suite in suites:
     failures = [test for test in suite.tests if not test.did_pass]
-    prefix = "❌" if failures else "✅"
+    prefix = red_background(" FAIL ") if failures else green_background(" PASS ")
 
     print(f"{prefix} {os.path.relpath(suite.path)}")
 
     for failure in failures:
-      print(f"  Failure at line {failure.line_number + 1}: expected {failure.expected}, got {failure.actual}\n")
+      print(f"  Line {failure.line_number + 1}: expected {failure.expected}, got {failure.actual}\n")
 
   suite_summary, test_summary = summarize(suites)
 
   print()
-  print(bold("Suites:"), green(f"{suite_summary.passed} passed,"), red(f"{suite_summary.failed} failed,"), f"{suite_summary.total} total")
-  print(bold("Tests:"), green(f"{test_summary.passed} passed,"), red(f"{test_summary.failed} failed,"), f"{test_summary.total} total")
+  print(summary_line(suite_summary, "Test Suites"))
+  print(summary_line(test_summary, "Tests"))
 
 # () -> None
 def run_suites():
