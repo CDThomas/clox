@@ -62,11 +62,38 @@ def print_results(suites):
     print(f"{prefix} {os.path.relpath(suite.path)}")
 
     for failure in failures:
-      print(f"  Failure at line {failure.line_number + 1}: expected {failure.expected}, got {failure.actual}")
-      print("\n")
+      print(f"  Failure at line {failure.line_number + 1}: expected {failure.expected}, got {failure.actual}\n")
+
+
+  passed_suites_count = 0
+  total_tests_count = 0
+  passed_tests_count = 0
+
+  for suite in suites:
+    results = [test.did_pass for test in suite.tests]
+
+    suite_tests_count = len(results)
+    suite_passed_tests_count = results.count(True)
+
+    if suite_tests_count == suite_passed_tests_count:
+      passed_suites_count += 1
+
+    total_tests_count += suite_tests_count
+    passed_tests_count += suite_passed_tests_count
+
+  total_suites_count = len(suites)
+  failed_suites_count = total_suites_count - passed_suites_count
+  failed_tests_count = total_tests_count - passed_tests_count
+
+  print(f"Suites: {passed_suites_count} passed, {failed_suites_count} failed, {total_suites_count} total")
+  print(f"Tests: {passed_tests_count} passed, {failed_tests_count} failed, {total_tests_count} total")
 
 
 # run_suites
+paths = []
 for dirpath, dirnames, files in os.walk(test_dir):
-  suites = [run_suite(os.path.join(dirpath, file)) for file in files]
-  print_results(suites)
+  for file in files:
+    paths.append(os.path.join(dirpath, file))
+
+suites = [run_suite(path) for path in paths]
+print_results(suites)
