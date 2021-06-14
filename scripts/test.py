@@ -1,8 +1,7 @@
 import os
 import subprocess
-from collections import namedtuple
-
-test_dir = os.path.join(os.path.dirname(__file__), "../test")
+import dataclasses
+import collections
 
 # TODO:
 # - Handle print statements rather than interpreting each line
@@ -10,8 +9,30 @@ test_dir = os.path.join(os.path.dirname(__file__), "../test")
 # - Support only running certain tests
 # - Support choosing an interpreter
 
-Suite = namedtuple("Suite", "path, tests")
-Test = namedtuple("Test", "expected, actual, line_number, did_pass")
+# Constants
+TEST_DIR = os.path.join(os.path.dirname(__file__), "../test")
+
+RESET = "\u001b[0m"
+BOLD = "\u001b[1m"
+RED = "\u001b[31;1m"
+GREEN = "\u001b[32;1m"
+
+# Data structures
+Suite = collections.namedtuple("Suite", ["path", "tests"])
+Test = collections.namedtuple("Test", ["expected", "actual", "line_number", "did_pass"])
+Summary = dataclasses.make_dataclass("Summary", ["passed", "failed", "total"])
+
+def color(text, color):
+  return f"{color}{text}{RESET}"
+
+def green(text):
+  return color(text, GREEN)
+
+def red(text):
+  return color(text, RED)
+
+def bold(text):
+  return color(text, BOLD)
 
 # (word: str, count: int) -> str
 def pluralize(word, count):
@@ -54,6 +75,30 @@ def run_suite(path):
 
     return Suite(path=path, tests=tests)
 
+# [Suite] -> Summary, Summary
+def summarize(suites):
+  suite_summary = Summary(passed=0, failed=0, total=0)
+  test_summary = Summary(passed=0, failed=0, total=0)
+
+  for suite in suites:
+    results = [test.did_pass for test in suite.tests]
+
+    suite_tests_count = len(results)
+    suite_passed_tests_count = results.count(True)
+
+    if suite_tests_count == suite_passed_tests_count:
+      suite_summary.passed += 1
+
+    test_summary.total += suite_tests_count
+    test_summary.passed += suite_passed_tests_count
+
+  suite_summary.total = len(suites)
+  suite_summary.failed = suite_summary.total - suite_summary.passed
+  test_summary.failed = test_summary.total - test_summary.passed
+
+  return suite_summary, test_summary
+
+# [Suite] -> None
 def print_results(suites):
   for suite in suites:
     failures = [test for test in suite.tests if not test.did_pass]
@@ -64,36 +109,20 @@ def print_results(suites):
     for failure in failures:
       print(f"  Failure at line {failure.line_number + 1}: expected {failure.expected}, got {failure.actual}\n")
 
+  suite_summary, test_summary = summarize(suites)
 
-  passed_suites_count = 0
-  total_tests_count = 0
-  passed_tests_count = 0
+  print()
+  print(bold("Suites:"), green(f"{suite_summary.passed} passed,"), red(f"{suite_summary.failed} failed,"), f"{suite_summary.total} total")
+  print(bold("Tests:"), green(f"{test_summary.passed} passed,"), red(f"{test_summary.failed} failed,"), f"{test_summary.total} total")
 
-  for suite in suites:
-    results = [test.did_pass for test in suite.tests]
+# () -> None
+def run_suites():
+  paths = []
+  for dirpath, dirnames, files in os.walk(TEST_DIR):
+    for file in files:
+      paths.append(os.path.join(dirpath, file))
 
-    suite_tests_count = len(results)
-    suite_passed_tests_count = results.count(True)
+  suites = [run_suite(path) for path in paths]
+  print_results(suites)
 
-    if suite_tests_count == suite_passed_tests_count:
-      passed_suites_count += 1
-
-    total_tests_count += suite_tests_count
-    passed_tests_count += suite_passed_tests_count
-
-  total_suites_count = len(suites)
-  failed_suites_count = total_suites_count - passed_suites_count
-  failed_tests_count = total_tests_count - passed_tests_count
-
-  print(f"Suites: {passed_suites_count} passed, {failed_suites_count} failed, {total_suites_count} total")
-  print(f"Tests: {passed_tests_count} passed, {failed_tests_count} failed, {total_tests_count} total")
-
-
-# run_suites
-paths = []
-for dirpath, dirnames, files in os.walk(test_dir):
-  for file in files:
-    paths.append(os.path.join(dirpath, file))
-
-suites = [run_suite(path) for path in paths]
-print_results(suites)
+run_suites()
