@@ -1,7 +1,7 @@
+import dataclasses
 import os
 import subprocess
-import dataclasses
-import collections
+import typing
 
 # TODO:
 # - Handle print statements rather than interpreting each line
@@ -18,41 +18,51 @@ RED = "\u001b[31;1m"
 GREEN = "\u001b[32;1m"
 
 # Data structures
-Suite = collections.namedtuple("Suite", ["path", "tests"])
-Test = collections.namedtuple("Test", ["expected", "actual", "line_number", "did_pass"])
-Summary = dataclasses.make_dataclass("Summary", ["passed", "failed", "total"])
 
-def color(text, color):
+class Test(typing.NamedTuple):
+  actual: str
+  did_pass: bool
+  expected: str
+  line_number: int
+
+class Suite(typing.NamedTuple):
+  path: str
+  tests: list[Test]
+
+@dataclasses.dataclass
+class Summary:
+  failed: int
+  passed: int
+  total: int
+
+def color(text: str, color: str) -> str:
   return f"{color}{text}{RESET}"
 
-def green(text):
+def green(text: str) -> str:
   return color(text, GREEN)
 
-def red(text):
+def red(text: str) -> str:
   return color(text, RED)
 
-def bold(text):
+def bold(text: str) -> str:
   return color(text, BOLD)
 
-def green_background(text):
+def green_background(text: str) -> str:
   return color(text, GREEN + REVERSED)
 
-def red_background(text):
+def red_background(text: str) -> str:
   return color(text, RED + REVERSED)
 
-# (word: str, count: int) -> str
-def pluralize(word, count):
+def pluralize(word: str, count: int) -> str:
   if count == 1:
     return word
   else:
     return word + "s"
 
-# (line: str) -> bool
-def should_test_line(line):
+def should_test_line(line: str) -> bool:
   return not line.strip().startswith("//") and "expect:" in line
 
-# (line: str, line_number: int) -> Test
-def run_test(line, line_number):
+def run_test(line: str, line_number: int) -> Test:
   # Remove print statements until these are supported by the interpreter
   line = line.replace("print", "")
 
@@ -72,8 +82,7 @@ def run_test(line, line_number):
 
   return Test(expected=expected, actual=actual, line_number=line_number, did_pass=did_pass)
 
-# path -> Suite
-def run_suite(path):
+def run_suite(path: str) -> Suite:
   with open(path, 'r') as reader:
     tests = [run_test(line, line_number)
               for line_number, line
@@ -81,8 +90,7 @@ def run_suite(path):
 
     return Suite(path=path, tests=tests)
 
-# [Suite] -> Summary, Summary
-def summarize(suites):
+def summarize(suites: list[Suite]) -> tuple[Suite, Suite]:
   suite_summary = Summary(passed=0, failed=0, total=0)
   test_summary = Summary(passed=0, failed=0, total=0)
 
@@ -104,7 +112,7 @@ def summarize(suites):
 
   return suite_summary, test_summary
 
-def summary_line(summary, label):
+def summary_line(summary: Summary, label: str) -> str:
   label_text = bold(f"{label}:")
   passed_text = green(f"{summary.passed} passed")
   failed_text = red(f"{summary.failed} failed")
@@ -116,8 +124,7 @@ def summary_line(summary, label):
     return f"{label_text} {passed_text}, {total_text}"
 
 
-# [Suite] -> None
-def print_results(suites):
+def print_results(suites: list[Suite]) -> None:
   for suite in suites:
     failures = [test for test in suite.tests if not test.did_pass]
     prefix = red_background(" FAIL ") if failures else green_background(" PASS ")
@@ -133,8 +140,7 @@ def print_results(suites):
   print(summary_line(suite_summary, "Test Suites"))
   print(summary_line(test_summary, "Tests"))
 
-# () -> None
-def run_suites():
+def run_suites() -> None:
   paths = []
   for dirpath, dirnames, files in os.walk(TEST_DIR):
     for file in files:
