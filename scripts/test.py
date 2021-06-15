@@ -1,4 +1,5 @@
 import dataclasses
+import glob
 import os
 import subprocess
 import sys
@@ -11,7 +12,7 @@ import typing
 # - Support choosing an interpreter
 
 # Constants
-TEST_DIR = os.path.join(os.path.dirname(__file__), "../test")
+TEST_PATH = "test/**/*.lox"
 RESET = "\u001b[0m"
 REVERSED = "\u001b[7m"
 BOLD = "\u001b[1m"
@@ -163,12 +164,7 @@ def print_results(
 
 
 def run_suites() -> None:
-    paths = []
-    for dirpath, dirnames, files in os.walk(TEST_DIR):
-        for file in files:
-            paths.append(os.path.join(dirpath, file))
-
-    suites = [run_suite(path) for path in paths]
+    suites = [run_suite(path) for path in glob.iglob(TEST_PATH)]
     suite_summary, test_summary = summarize(suites)
 
     print_results(suites, suite_summary, test_summary)
