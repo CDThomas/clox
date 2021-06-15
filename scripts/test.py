@@ -1,6 +1,7 @@
 import dataclasses
 import os
 import subprocess
+import sys
 import typing
 
 # TODO:
@@ -142,7 +143,9 @@ def summary_line(summary: Summary, label: str) -> str:
         return f"{label_text} {passed_text}, {total_text}"
 
 
-def print_results(suites: list[Suite]) -> None:
+def print_results(
+    suites: list[Suite], suite_summary: Summary, test_summary: Summary
+) -> None:
     for suite in suites:
         failures = [test for test in suite.tests if not test.did_pass]
         prefix = red_background(" FAIL ") if failures else green_background(" PASS ")
@@ -153,8 +156,6 @@ def print_results(suites: list[Suite]) -> None:
             print(
                 f"  Line {failure.line_number + 1}: expected {failure.expected}, got {failure.actual}\n"
             )
-
-    suite_summary, test_summary = summarize(suites)
 
     print()
     print(summary_line(suite_summary, "Test Suites"))
@@ -168,7 +169,12 @@ def run_suites() -> None:
             paths.append(os.path.join(dirpath, file))
 
     suites = [run_suite(path) for path in paths]
-    print_results(suites)
+    suite_summary, test_summary = summarize(suites)
+
+    print_results(suites, suite_summary, test_summary)
+
+    if suite_summary.failed:
+        sys.exit(1)
 
 
 run_suites()
