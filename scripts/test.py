@@ -86,7 +86,7 @@ def run_test(line: str, line_number: int) -> Test:
     expected = line.partition("expect:")[2].strip()
 
     # Interpret each line individually until printing (writing to stdout) is
-    # supported in interpreter. Later, this can passs the filename to `open`
+    # supported in interpreter. Later, this can passs the filename to `subprocess.run`
     # and compare the parsed expecations to stdout.
     result = subprocess.run(["./clox"], capture_output=True, text=True, input=line)
     actual = result.stdout.split("\n")[-3]
