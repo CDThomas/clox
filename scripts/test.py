@@ -1,4 +1,5 @@
 import dataclasses
+import enum
 import glob
 import os
 import subprocess
@@ -11,13 +12,9 @@ import typing
 # - Support only running certain tests
 # - Support choosing an interpreter
 
-# Constants
-TEST_PATH = "test/**/*.lox"
-RESET = "\u001b[0m"
-REVERSED = "\u001b[7m"
-BOLD = "\u001b[1m"
-RED = "\u001b[31;1m"
-GREEN = "\u001b[32;1m"
+# Assumes cwd is project root.
+TEST_PATH: typing.Final = "test/**/*.lox"
+
 
 # Data structures
 
@@ -41,35 +38,37 @@ class Summary:
     total: int
 
 
-def color(text: str, color: str) -> str:
-    return f"{color}{text}{RESET}"
+class Ansi_Code(enum.Enum):
+    RESET = "\u001b[0m"
+    REVERSED = "\u001b[7m"
+    BOLD = "\u001b[1m"
+    RED = "\u001b[31;1m"
+    GREEN = "\u001b[32;1m"
+
+
+def format(text: str, ansi_codes: list[Ansi_Code]) -> str:
+    ansi_code_str = "".join([ansi_code.value for ansi_code in ansi_codes])
+    return f"{ansi_code_str}{text}{Ansi_Code.RESET.value}"
 
 
 def green(text: str) -> str:
-    return color(text, GREEN)
+    return format(text, [Ansi_Code.GREEN])
 
 
 def red(text: str) -> str:
-    return color(text, RED)
+    return format(text, [Ansi_Code.RED])
 
 
 def bold(text: str) -> str:
-    return color(text, BOLD)
+    return format(text, [Ansi_Code.BOLD])
 
 
 def green_background(text: str) -> str:
-    return color(text, GREEN + REVERSED)
+    return format(text, [Ansi_Code.GREEN, Ansi_Code.REVERSED])
 
 
 def red_background(text: str) -> str:
-    return color(text, RED + REVERSED)
-
-
-def pluralize(word: str, count: int) -> str:
-    if count == 1:
-        return word
-    else:
-        return word + "s"
+    return format(text, [Ansi_Code.RED, Ansi_Code.REVERSED])
 
 
 def should_test_line(line: str) -> bool:
@@ -86,15 +85,20 @@ def run_test(line: str, line_number: int) -> Test:
     expected = line.partition("expect:")[2].strip()
 
     # Interpret each line individually until printing (writing to stdout) is
-    # supported in interpreter. Later, this can passs the filename to `subprocess.run`
-    # and compare the parsed expecations to stdout.
-    result = subprocess.run(["./clox"], capture_output=True, text=True, input=line)
+    # supported in interpreter. Later, this can passs the filename to
+    # `subprocess.run` and compare the parsed expecations to stdout.
+    result = subprocess.run(
+        ["./clox"], capture_output=True, text=True, input=line
+    )
     actual = result.stdout.split("\n")[-3]
 
     did_pass = actual == expected
 
     return Test(
-        expected=expected, actual=actual, line_number=line_number, did_pass=did_pass
+        expected=expected,
+        actual=actual,
+        line_number=line_number,
+        did_pass=did_pass,
     )
 
 
@@ -109,7 +113,7 @@ def run_suite(path: str) -> Suite:
         return Suite(path=path, tests=tests)
 
 
-def summarize(suites: list[Suite]) -> tuple[Suite, Suite]:
+def summarize(suites: list[Suite]) -> tuple[Summary, Summary]:
     suite_summary = Summary(passed=0, failed=0, total=0)
     test_summary = Summary(passed=0, failed=0, total=0)
 
@@ -144,18 +148,28 @@ def summary_line(summary: Summary, label: str) -> str:
         return f"{label_text} {passed_text}, {total_text}"
 
 
+def suite_status_text(failure_count: int) -> str:
+    if failure_count:
+        return red_background(" FAIL ")
+    else:
+        return green_background(" PASS ")
+
+
 def print_results(
     suites: list[Suite], suite_summary: Summary, test_summary: Summary
 ) -> None:
     for suite in suites:
         failures = [test for test in suite.tests if not test.did_pass]
-        prefix = red_background(" FAIL ") if failures else green_background(" PASS ")
 
-        print(f"{prefix} {os.path.relpath(suite.path)}")
+        print(
+            f"{suite_status_text(len(failures))} {os.path.relpath(suite.path)}"
+        )
 
         for failure in failures:
             print(
-                f"  Line {failure.line_number + 1}: expected {failure.expected}, got {failure.actual}\n"
+                f"  Line {failure.line_number + 1}:",
+                f"expected {failure.expected},",
+                f"got {failure.actual}\n",
             )
 
     print()
