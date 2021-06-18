@@ -16,9 +16,6 @@ import typing
 TEST_PATH: typing.Final = "test/**/*.lox"
 
 
-# Data structures
-
-
 class Test(typing.NamedTuple):
     actual: str
     did_pass: bool
