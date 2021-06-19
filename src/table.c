@@ -60,13 +60,16 @@ static void adjustCapacity(Table* table, int capacity) {
     entries[i].value = NIL_VAL;
   }
 
+  table->count = 0;
   for (int i = 0; i < table->capacity; i++) {
     Entry* entry = &table->entries[i];
+    // Skip both empty buckets and tombstones (because both have NULL keys).
     if (entry->key == NULL) continue;
 
     Entry* dest = findEntry(entries, capacity, entry->key);
     dest->key = entry->key;
     dest->value = entry->value;
+    table->count++;
   }
 
   FREE_ARRAY(Entry, table->entries, table->capacity);
@@ -75,7 +78,7 @@ static void adjustCapacity(Table* table, int capacity) {
 }
 
 bool tableSet(Table* table, ObjString* key, Value value) {
-  // Grow array when table is at least 75% full
+  // Grow array when table is at least 75% full.
   if (table->count + 1 > table->capacity * TABLE_MAX_LOAD) {
     int capacity = GROW_CAPACITY(table->capacity);
     adjustCapacity(table, capacity);
@@ -83,7 +86,8 @@ bool tableSet(Table* table, ObjString* key, Value value) {
 
   Entry* entry = findEntry(table->entries, table->capacity, key);
   bool isNewKey = entry->key == NULL;
-  if (isNewKey) table->count++;
+  // Only increment the count when filling a completely empty bucket (i.e. not a tombstone).
+  if (isNewKey && IS_NIL(entry->value)) table->count++;
 
   entry->key = key;
   entry->value = value;
