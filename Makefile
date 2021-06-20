@@ -11,6 +11,7 @@ debug:
 # Compile the C interpreter.
 clox:
 	@ $(MAKE) -f util/c.make NAME=clox MODE=release SOURCE_DIR=src
+	@ rm -f clox # Nuke the binary before copying (workaround for https://stackoverflow.com/questions/65258043/codesigning-modified-binaries-apple-silicon-m1)
 	@ cp build/clox clox # For convenience, copy the interpreter to the top level.
 
 # Remove all build outputs and intermediate files.
