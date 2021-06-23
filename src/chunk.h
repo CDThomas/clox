@@ -19,6 +19,7 @@ typedef enum {
   OP_DIVIDE, // ex: `20 / 2`
   OP_NOT, // unary not: `!true`
   OP_NEGATE, // ex: `-1`
+  OP_PRINT, // ex: `print 1`
   OP_RETURN, // return from the current function
 } OpCode;
 
