@@ -10,6 +10,7 @@ typedef enum {
   OP_NIL,
   OP_TRUE,
   OP_FALSE,
+  OP_POP,
   OP_EQUAL, // comparison: `1 == 1`
   OP_GREATER, // comparison: `2 > 1`
   OP_LESS, // comparison: `1 < 2`
