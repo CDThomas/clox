@@ -19,7 +19,7 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 # Run all tests for clox
-test:
+test: clox
 	python scripts/test.py
 
 .PHONY: clean clox debug test
