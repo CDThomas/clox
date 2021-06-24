@@ -13,6 +13,7 @@ typedef enum {
   OP_POP,
   OP_GET_GLOBAL,
   OP_DEFINE_GLOBAL,
+  OP_SET_GLOBAL,
   OP_EQUAL, // comparison: `1 == 1`
   OP_GREATER, // comparison: `2 > 1`
   OP_LESS, // comparison: `1 < 2`
