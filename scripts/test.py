@@ -71,10 +71,6 @@ def red_background(text: str) -> str:
     return format(text, [Ansi_Code.RED, Ansi_Code.REVERSED])
 
 
-def should_test_line(line: str) -> bool:
-    return not line.strip().startswith("//") and "expect:" in line
-
-
 def run_test(actual: str, expectation: Expectation) -> Test:
     did_pass = actual == expectation.expected
 
@@ -181,7 +177,9 @@ def print_results(
 
 
 def run_suites() -> None:
-    suites = [run_suite(path) for path in glob.iglob(TEST_PATH)]
+    suites = [
+        run_suite(path) for path in glob.iglob(TEST_PATH, recursive=True)
+    ]
     suite_summary, test_summary = summarize(suites)
 
     print_results(suites, suite_summary, test_summary)
