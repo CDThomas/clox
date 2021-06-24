@@ -99,6 +99,8 @@ def run_suite(path: str) -> Suite:
             ["./clox", path], capture_output=True, text=True
         )
 
+        # TODO: handle both expected and unexpected errors
+
         results = process.stdout.splitlines()
 
         # TODO: handle num expecations not matching num lines in stdout.
