@@ -32,10 +32,13 @@ static void runtimeError(const char* format, ...) {
 void initVM() {
   resetStack();
   vm.objects = NULL;
+
+  initTable(&vm.globals);
   initTable(&vm.strings);
 }
 
 void freeVM() {
+  freeTable(&vm.globals);
   freeTable(&vm.strings);
   freeObjects();
 }
@@ -79,6 +82,10 @@ static InterpretResult run() {
 // looks up the corresponding Value in the chunk's constant table.
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
 
+// Reads a constant (corresponding to an operand in the next byte of bytecode) and casts it to
+// a string.
+#define READ_STRING() AS_STRING(READ_CONSTANT())
+
 // Pops the top two values off of the stack, applies op, and pushes the result onto the stack.
 // The do/while loop here is a silly C hack for allowing macros to be used in any scope (in/out
 // of a block and with/without a semi at the end).
@@ -119,6 +126,12 @@ static InterpretResult run() {
       case OP_TRUE: push(BOOL_VAL(true)); break;
       case OP_FALSE: push(BOOL_VAL(false)); break;
       case OP_POP: pop(); break;
+      case OP_DEFINE_GLOBAL: {
+        ObjString* name = READ_STRING();
+        tableSet(&vm.globals, name, peek(0));
+        pop();
+        break;
+      }
       case OP_EQUAL: {
         Value a = pop();
         Value b = pop();
@@ -167,6 +180,7 @@ static InterpretResult run() {
 
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef READ_STRING
 #undef BINARY_OP
 }
 
