@@ -7,7 +7,6 @@ import sys
 import typing
 
 # TODO:
-# - Handle print statements rather than interpreting each line
 # - Support expecting errors
 # - Support only running certain tests
 # - Support choosing an interpreter
@@ -16,11 +15,15 @@ import typing
 TEST_PATH: typing.Final = "test/**/*.lox"
 
 
+class Expectation(typing.NamedTuple):
+    expected: str
+    line_number: int
+
+
 class Test(typing.NamedTuple):
     actual: str
     did_pass: bool
-    expected: str
-    line_number: int
+    expectation: Expectation
 
 
 class Suite(typing.NamedTuple):
@@ -72,39 +75,42 @@ def should_test_line(line: str) -> bool:
     return not line.strip().startswith("//") and "expect:" in line
 
 
-def run_test(line: str, line_number: int) -> Test:
-    # Remove print statements until these are supported by the interpreter
-    line = line.replace("print", "")
-
-    # Remove semis until these are supported by the interpreter
-    line = line.replace(";", "")
-
-    expected = line.partition("expect:")[2].strip()
-
-    # Interpret each line individually until printing (writing to stdout) is
-    # supported in interpreter. Later, this can passs the filename to
-    # `subprocess.run` and compare the parsed expecations to stdout.
-    result = subprocess.run(
-        ["./clox"], capture_output=True, text=True, input=line
-    )
-    actual = result.stdout.split("\n")[-3]
-
-    did_pass = actual == expected
+def run_test(actual: str, expectation: Expectation) -> Test:
+    did_pass = actual == expectation.expected
 
     return Test(
-        expected=expected,
+        expectation=expectation,
         actual=actual,
-        line_number=line_number,
         did_pass=did_pass,
     )
 
 
+def parse_expectation(line: str, line_number: int) -> Expectation:
+    expected = line.partition("expect:")[2].strip()
+    return Expectation(expected=expected, line_number=line_number)
+
+
 def run_suite(path: str) -> Suite:
     with open(path, "r") as reader:
-        tests = [
-            run_test(line, line_number)
+        expectations = [
+            parse_expectation(line, line_number)
             for line_number, line in enumerate(reader)
-            if should_test_line(line)
+            if "expect:" in line
+        ]
+
+        # Assumes release build of clox (or at least no debug output).
+        process = subprocess.run(
+            ["./clox", path], capture_output=True, text=True
+        )
+
+        results = process.stdout.splitlines()
+
+        # TODO: handle num expecations not matching num lines in stdout.
+
+        # Compare the results to expectations.
+        tests = [
+            run_test(results[index], expectation)
+            for index, expectation in enumerate(expectations)
         ]
 
         return Suite(path=path, tests=tests)
@@ -164,8 +170,8 @@ def print_results(
 
         for failure in failures:
             print(
-                f"  Line {failure.line_number + 1}:",
-                f"expected {failure.expected},",
+                f"  Line {failure.expectation.line_number + 1}:",
+                f"expected {failure.expectation.expected},",
                 f"got {failure.actual}\n",
             )
 
