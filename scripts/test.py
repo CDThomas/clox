@@ -2,20 +2,30 @@ import dataclasses
 import enum
 import glob
 import os
+import re
 import subprocess
 import sys
 import typing
 
 # TODO:
 # - Support expecting errors
+#    - Compilation errors: https://github.com/munificent/craftinginterpreters/blob/master/test/assignment/grouping.lox
+#      - Line number is optional https://github.com/munificent/craftinginterpreters/blob/3e5f0fa6636b68eddfe4dc0173af95130403f961/test/unexpected_character.lox
+#    - Runtime errors: https://github.com/munificent/craftinginterpreters/blob/master/test/assignment/undefined.lox
+#    - can have both runtime error expectations and normal expectations (https://github.com/munificent/craftinginterpreters/blob/3e5f0fa6636b68eddfe4dc0173af95130403f961/test/super/extra_arguments.lox)
+#    - can only have one compilation error expectation
 # - Support only running certain tests
 # - Support choosing an interpreter
 
 # Assumes cwd is project root.
 TEST_PATH: typing.Final = "test/**/*.lox"
 
+EXPECTED_OUTPUT_REGEX: typing.Final = r"// expect: ?(.*)"
+EXPECTED_COMPILE_ERROR_REGEX: typing.Final = r"// (Error.*)"
+EXPECTED_RUNTIME_ERROR_REGEX: typing.Final = r"// expect runtime error: (.+)"
 
-class Expectation(typing.NamedTuple):
+
+class OutputExpectation(typing.NamedTuple):
     expected: str
     line_number: int
 
@@ -23,7 +33,8 @@ class Expectation(typing.NamedTuple):
 class Test(typing.NamedTuple):
     actual: str
     did_pass: bool
-    expectation: Expectation
+    expectation: OutputExpectation
+    failure_message: typing.Optional[str]
 
 
 class Suite(typing.NamedTuple):
@@ -71,27 +82,60 @@ def red_background(text: str) -> str:
     return format(text, [Ansi_Code.RED, Ansi_Code.REVERSED])
 
 
-def run_test(actual: str, expectation: Expectation) -> Test:
+def run_test(actual: str, expectation: OutputExpectation) -> Test:
     did_pass = actual == expectation.expected
 
     return Test(
         expectation=expectation,
         actual=actual,
         did_pass=did_pass,
+        failure_message=None,
     )
 
 
-def parse_expectation(line: str, line_number: int) -> Expectation:
-    expected = line.partition("expect:")[2].strip()
-    return Expectation(expected=expected, line_number=line_number)
+def parse_expectation(
+    line: str, line_number: int
+) -> typing.Optional[OutputExpectation]:
+    if match := re.search(EXPECTED_OUTPUT_REGEX, line):
+        expected = match.group(1)
+        return OutputExpectation(expected=expected, line_number=line_number)
+    else:
+        return None
+
+
+def run_output_tests(
+    stdout: str, output_expectations: list[OutputExpectation]
+) -> list[Test]:
+    # TODO: handle num expecations not matching num lines in stdout.
+    output_lines = stdout.splitlines()
+
+    # Compare the results to expectations.
+    return [
+        run_test(output_lines[index], expectation)
+        for index, expectation in enumerate(output_expectations)
+    ]
+
+
+def run_tests(
+    stdout: str, stderr: str, expectations: list[OutputExpectation]
+) -> list[Test]:
+    output_expectations: list[OutputExpectation] = []
+
+    for expectation in expectations:
+        if type(expectation) is OutputExpectation:
+            output_expectations.append(expectation)
+
+    output_tests = run_output_tests(stdout, output_expectations)
+
+    return output_tests
 
 
 def run_suite(path: str) -> Suite:
     with open(path, "r") as reader:
         expectations = [
-            parse_expectation(line, line_number)
+            expectation
             for line_number, line in enumerate(reader)
-            if "expect:" in line
+            if (expectation := parse_expectation(line, line_number))
         ]
 
         # Assumes release build of clox (or at least no debug output).
@@ -99,17 +143,7 @@ def run_suite(path: str) -> Suite:
             ["./clox", path], capture_output=True, text=True
         )
 
-        # TODO: handle both expected and unexpected errors
-
-        results = process.stdout.splitlines()
-
-        # TODO: handle num expecations not matching num lines in stdout.
-
-        # Compare the results to expectations.
-        tests = [
-            run_test(results[index], expectation)
-            for index, expectation in enumerate(expectations)
-        ]
+        tests = run_tests(process.stdout, process.stderr, expectations)
 
         return Suite(path=path, tests=tests)
 
