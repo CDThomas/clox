@@ -20,14 +20,23 @@ import typing
 TEST_PATH: typing.Final = "test/**/*.lox"
 
 EXPECTED_OUTPUT_REGEX: typing.Final = r"// expect: ?(.*)"
-EXPECTED_SYNTAX_ERROR_REGEX: typing.Final = r"// (Error.*)"
+EXPECTED_SYNTAX_ERROR_REGEX: typing.Final = (
+    r"// (?:\[line (?P<line_number>\d+)\] )?(?P<error>Error.+)"
+)
 EXPECTED_RUNTIME_ERROR_REGEX: typing.Final = r"// expect runtime error: (.+)"
 
 
-# Expectation kinds: output, compile error, runtime error
 class OutputExpectation(typing.NamedTuple):
     expected: str
     line_number: int
+
+
+class SyntaxErrorExpectation(typing.NamedTuple):
+    expected: str
+    line_number: int
+
+
+Expectation = typing.Union[OutputExpectation, SyntaxErrorExpectation]
 
 
 class Failure(typing.NamedTuple):
@@ -89,27 +98,54 @@ def run_output_expectation(
             f"expected {expectation.expected}, got {actual}."
         )
 
-        return Failure(message=message)
+        return Failure(message)
 
 
 def parse_expectation(
     line: str, line_number: int
-) -> typing.Optional[OutputExpectation]:
+) -> typing.Optional[Expectation]:
     if match := re.search(EXPECTED_OUTPUT_REGEX, line):
         expected = match.group(1)
         return OutputExpectation(expected=expected, line_number=line_number)
+    if match := re.search(EXPECTED_SYNTAX_ERROR_REGEX, line):
+        line_number_match = match.groupdict()["line_number"] or line_number
+        expected_line_number = (
+            int(line_number_match) if line_number_match else line_number
+        )
+        expected = match.groupdict()["error"]
+        return SyntaxErrorExpectation(
+            expected=expected, line_number=expected_line_number
+        )
     else:
         return None
 
 
-def run_output_expectations(
+def validate_expectations(
+    output_expectations: list[OutputExpectation],
+    syntax_error_expectations: list[SyntaxErrorExpectation],
+) -> list[Failure]:
+    if syntax_error_expectations and output_expectations:
+        return [Failure("Can't expect both syntax errors and output")]
+    else:
+        return []
+
+
+def verify_syntax_error_expectations(
+    error_lines: list[str],
+    syntax_error_expectations: list[SyntaxErrorExpectation],
+) -> list[Failure]:
+    # TODO: implement
+    return []
+
+
+def verify_output_expectations(
     output_lines: list[str], output_expectations: list[OutputExpectation]
 ) -> list[Failure]:
     if len(output_lines) > len(output_expectations):
-        return [Failure("Recieved output without matching expectation(s).")]
+        return [Failure("Recieved extra output on stdout.")]
 
     if len(output_expectations) > len(output_lines):
-        return [Failure("Missing expected output.")]
+        return [Failure("Missing expected output on stdout.")]
 
     return [
         failure
@@ -118,20 +154,58 @@ def run_output_expectations(
     ]
 
 
+def verify_exit_code(
+    actual_exit_code: int, expected_exit_code: int
+) -> list[Failure]:
+    if actual_exit_code != expected_exit_code:
+        message = (
+            f"Expected interpreter exit code to be {expected_exit_code} "
+            f"but received {actual_exit_code}"
+        )
+        return [Failure(message)]
+    else:
+        return []
+
+
 def run_expectations(
-    stdout: str, stderr: str, expectations: list[OutputExpectation]
+    stdout: str,
+    stderr: str,
+    exit_code: int,
+    expectations: list[Expectation],
 ) -> list[Failure]:
     output_expectations: list[OutputExpectation] = []
+    syntax_error_expectations: list[SyntaxErrorExpectation] = []
 
     for expectation in expectations:
         if type(expectation) is OutputExpectation:
             output_expectations.append(expectation)
+        if type(expectation) is SyntaxErrorExpectation:
+            syntax_error_expectations.append(expectation)
 
     output_lines = stdout.splitlines()
+    error_lines = stderr.splitlines()
 
-    failures = run_output_expectations(output_lines, output_expectations)
+    validation_failures = validate_expectations(
+        output_expectations, syntax_error_expectations
+    )
 
-    return failures
+    if validation_failures:
+        return validation_failures
+
+    if syntax_error_expectations:
+        exit_code_failures = verify_exit_code(exit_code, 65)
+        syntax_error_expectation_failures = verify_syntax_error_expectations(
+            error_lines, syntax_error_expectations
+        )
+        return syntax_error_expectation_failures + exit_code_failures
+
+    exit_code_failures = verify_exit_code(exit_code, 0)
+
+    output_expectation_failures = verify_output_expectations(
+        output_lines, output_expectations
+    )
+
+    return output_expectation_failures + exit_code_failures
 
 
 def run_test(path: str) -> Test:
@@ -148,7 +222,7 @@ def run_test(path: str) -> Test:
         )
 
         failures = run_expectations(
-            process.stdout, process.stderr, expectations
+            process.stdout, process.stderr, process.returncode, expectations
         )
 
         return Test(path=path, failures=failures)
