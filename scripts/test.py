@@ -21,32 +21,29 @@ import typing
 TEST_PATH: typing.Final = "test/**/*.lox"
 
 EXPECTED_OUTPUT_REGEX: typing.Final = r"// expect: ?(.*)"
-EXPECTED_COMPILE_ERROR_REGEX: typing.Final = r"// (Error.*)"
+EXPECTED_SYNTAX_ERROR_REGEX: typing.Final = r"// (Error.*)"
 EXPECTED_RUNTIME_ERROR_REGEX: typing.Final = r"// expect runtime error: (.+)"
 
 
+# Expectation kinds: output, compile error, runtime error
 class OutputExpectation(typing.NamedTuple):
     expected: str
     line_number: int
 
 
+class Failure(typing.NamedTuple):
+    message: str
+
+
 class Test(typing.NamedTuple):
-    actual: str
-    did_pass: bool
-    expectation: OutputExpectation
-    failure_message: typing.Optional[str]
-
-
-class Suite(typing.NamedTuple):
     path: str
-    tests: list[Test]
+    failures: list[Failure]
 
 
-@dataclasses.dataclass
-class Summary:
-    failed: int
-    passed: int
-    total: int
+class Summary(typing.NamedTuple):
+    failed_count: int
+    passed_count: int
+    total_count: int
 
 
 class Ansi_Code(enum.Enum):
@@ -82,15 +79,20 @@ def red_background(text: str) -> str:
     return format(text, [Ansi_Code.RED, Ansi_Code.REVERSED])
 
 
-def run_test(actual: str, expectation: OutputExpectation) -> Test:
+def run_expectation(
+    actual: str, expectation: OutputExpectation
+) -> typing.Optional[Failure]:
     did_pass = actual == expectation.expected
 
-    return Test(
-        expectation=expectation,
-        actual=actual,
-        did_pass=did_pass,
-        failure_message=None,
-    )
+    if did_pass:
+        return None
+    else:
+        message = (
+            f"  Line {expectation.line_number + 1}: "
+            f"expected {expectation.expected}, got {actual}\n"
+        )
+
+        return Failure(message=message)
 
 
 def parse_expectation(
@@ -103,34 +105,34 @@ def parse_expectation(
         return None
 
 
-def run_output_tests(
+def run_output_expectations(
     stdout: str, output_expectations: list[OutputExpectation]
-) -> list[Test]:
+) -> list[Failure]:
     # TODO: handle num expecations not matching num lines in stdout.
     output_lines = stdout.splitlines()
 
-    # Compare the results to expectations.
     return [
-        run_test(output_lines[index], expectation)
+        failure
         for index, expectation in enumerate(output_expectations)
+        if (failure := run_expectation(output_lines[index], expectation))
     ]
 
 
-def run_tests(
+def run_expectations(
     stdout: str, stderr: str, expectations: list[OutputExpectation]
-) -> list[Test]:
+) -> list[Failure]:
     output_expectations: list[OutputExpectation] = []
 
     for expectation in expectations:
         if type(expectation) is OutputExpectation:
             output_expectations.append(expectation)
 
-    output_tests = run_output_tests(stdout, output_expectations)
+    failures = run_output_expectations(stdout, output_expectations)
 
-    return output_tests
+    return failures
 
 
-def run_suite(path: str) -> Suite:
+def run_test(path: str) -> Test:
     with open(path, "r") as reader:
         expectations = [
             expectation
@@ -143,85 +145,63 @@ def run_suite(path: str) -> Suite:
             ["./clox", path], capture_output=True, text=True
         )
 
-        tests = run_tests(process.stdout, process.stderr, expectations)
+        failures = run_expectations(
+            process.stdout, process.stderr, expectations
+        )
 
-        return Suite(path=path, tests=tests)
-
-
-def summarize(suites: list[Suite]) -> tuple[Summary, Summary]:
-    suite_summary = Summary(passed=0, failed=0, total=0)
-    test_summary = Summary(passed=0, failed=0, total=0)
-
-    for suite in suites:
-        results = [test.did_pass for test in suite.tests]
-
-        suite_tests_count = len(results)
-        suite_passed_tests_count = results.count(True)
-
-        if suite_tests_count == suite_passed_tests_count:
-            suite_summary.passed += 1
-
-        test_summary.total += suite_tests_count
-        test_summary.passed += suite_passed_tests_count
-
-    suite_summary.total = len(suites)
-    suite_summary.failed = suite_summary.total - suite_summary.passed
-    test_summary.failed = test_summary.total - test_summary.passed
-
-    return suite_summary, test_summary
+        return Test(path=path, failures=failures)
 
 
-def summary_line(summary: Summary, label: str) -> str:
-    label_text = bold(f"{label}:")
-    passed_text = green(f"{summary.passed} passed")
-    failed_text = red(f"{summary.failed} failed")
-    total_text = f"{summary.total} total"
+def summarize(tests: list[Test]) -> Summary:
+    total_count = len(tests)
+    failed_count = sum([bool(test.failures) for test in tests])
+    passed_count = total_count - failed_count
 
-    if summary.failed:
+    return Summary(
+        passed_count=passed_count,
+        failed_count=failed_count,
+        total_count=total_count,
+    )
+
+
+def summary_line(summary: Summary) -> str:
+    label_text = bold("Tests:")
+    passed_text = green(f"{summary.passed_count} passed")
+    failed_text = red(f"{summary.failed_count} failed")
+    total_text = f"{summary.total_count} total"
+
+    if summary.failed_count:
         return f"{label_text} {passed_text}, {failed_text}, {total_text}"
     else:
         return f"{label_text} {passed_text}, {total_text}"
 
 
-def suite_status_text(failure_count: int) -> str:
-    if failure_count:
+def test_status_text(test: Test) -> str:
+    if test.failures:
         return red_background(" FAIL ")
     else:
         return green_background(" PASS ")
 
 
-def print_results(
-    suites: list[Suite], suite_summary: Summary, test_summary: Summary
-) -> None:
-    for suite in suites:
-        failures = [test for test in suite.tests if not test.did_pass]
+def print_results(tests: list[Test], summary: Summary) -> None:
+    for test in tests:
+        print(f"{test_status_text(test)} {os.path.relpath(test.path)}")
 
-        print(
-            f"{suite_status_text(len(failures))} {os.path.relpath(suite.path)}"
-        )
-
-        for failure in failures:
-            print(
-                f"  Line {failure.expectation.line_number + 1}:",
-                f"expected {failure.expectation.expected},",
-                f"got {failure.actual}\n",
-            )
+        for failure in test.failures:
+            print(failure.message)
 
     print()
-    print(summary_line(suite_summary, "Test Suites"))
-    print(summary_line(test_summary, "Tests"))
+    print(summary_line(summary))
 
 
-def run_suites() -> None:
-    suites = [
-        run_suite(path) for path in glob.iglob(TEST_PATH, recursive=True)
-    ]
-    suite_summary, test_summary = summarize(suites)
+def run_tests() -> None:
+    tests = [run_test(path) for path in glob.iglob(TEST_PATH, recursive=True)]
+    summary = summarize(tests)
 
-    print_results(suites, suite_summary, test_summary)
+    print_results(tests, summary)
 
-    if suite_summary.failed:
+    if summary.failed_count:
         sys.exit(1)
 
 
-run_suites()
+run_tests()
