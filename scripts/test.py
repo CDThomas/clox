@@ -1,4 +1,3 @@
-import dataclasses
 import enum
 import glob
 import os
@@ -79,17 +78,15 @@ def red_background(text: str) -> str:
     return format(text, [Ansi_Code.RED, Ansi_Code.REVERSED])
 
 
-def run_expectation(
+def run_output_expectation(
     actual: str, expectation: OutputExpectation
 ) -> typing.Optional[Failure]:
-    did_pass = actual == expectation.expected
-
-    if did_pass:
+    if actual == expectation.expected:
         return None
     else:
         message = (
-            f"  Line {expectation.line_number + 1}: "
-            f"expected {expectation.expected}, got {actual}\n"
+            f"Line {expectation.line_number + 1}: "
+            f"expected {expectation.expected}, got {actual}."
         )
 
         return Failure(message=message)
@@ -106,15 +103,18 @@ def parse_expectation(
 
 
 def run_output_expectations(
-    stdout: str, output_expectations: list[OutputExpectation]
+    output_lines: list[str], output_expectations: list[OutputExpectation]
 ) -> list[Failure]:
-    # TODO: handle num expecations not matching num lines in stdout.
-    output_lines = stdout.splitlines()
+    if len(output_lines) > len(output_expectations):
+        return [Failure("Recieved output without matching expectation(s).")]
+
+    if len(output_expectations) > len(output_lines):
+        return [Failure("Missing expected output.")]
 
     return [
         failure
-        for index, expectation in enumerate(output_expectations)
-        if (failure := run_expectation(output_lines[index], expectation))
+        for actual, expectation in zip(output_lines, output_expectations)
+        if (failure := run_output_expectation(actual, expectation))
     ]
 
 
@@ -127,7 +127,9 @@ def run_expectations(
         if type(expectation) is OutputExpectation:
             output_expectations.append(expectation)
 
-    failures = run_output_expectations(stdout, output_expectations)
+    output_lines = stdout.splitlines()
+
+    failures = run_output_expectations(output_lines, output_expectations)
 
     return failures
 
@@ -188,7 +190,7 @@ def print_results(tests: list[Test], summary: Summary) -> None:
         print(f"{test_status_text(test)} {os.path.relpath(test.path)}")
 
         for failure in test.failures:
-            print(failure.message)
+            print(f"  {failure.message}\n")
 
     print()
     print(summary_line(summary))
