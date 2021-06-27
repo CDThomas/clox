@@ -12,7 +12,8 @@ import typing
 #      - Line number is optional https://github.com/munificent/craftinginterpreters/blob/3e5f0fa6636b68eddfe4dc0173af95130403f961/test/unexpected_character.lox
 #    - Runtime errors: https://github.com/munificent/craftinginterpreters/blob/master/test/assignment/undefined.lox
 #    - can have both runtime error expectations and normal expectations (https://github.com/munificent/craftinginterpreters/blob/3e5f0fa6636b68eddfe4dc0173af95130403f961/test/super/extra_arguments.lox)
-#    - can only have one compilation error expectation
+#    - can only have one runtime error expectation
+#    - can't have output/runtime error expectations if there are compilation error expectations
 # - Support only running certain tests
 # - Support choosing an interpreter
 
@@ -20,10 +21,14 @@ import typing
 TEST_PATH: typing.Final = "test/**/*.lox"
 
 EXPECTED_OUTPUT_REGEX: typing.Final = r"// expect: ?(.*)"
+
 EXPECTED_SYNTAX_ERROR_REGEX: typing.Final = (
     r"// (?:\[line (?P<line_number>\d+)\] )?(?P<error>Error.+)"
 )
+
 EXPECTED_RUNTIME_ERROR_REGEX: typing.Final = r"// expect runtime error: (.+)"
+
+SYNTAX_ERROR_REGEX: typing.Final = r"^\[line \d+\] Error.+"
 
 
 class OutputExpectation(typing.NamedTuple):
@@ -87,14 +92,14 @@ def red_background(text: str) -> str:
     return format(text, [Ansi_Code.RED, Ansi_Code.REVERSED])
 
 
-def run_output_expectation(
+def verify_output_expectation(
     actual: str, expectation: OutputExpectation
 ) -> typing.Optional[Failure]:
     if actual == expectation.expected:
         return None
     else:
         message = (
-            f"Line {expectation.line_number + 1}: "
+            f"Line {expectation.line_number}: "
             f"expected {expectation.expected}, got {actual}."
         )
 
@@ -108,7 +113,7 @@ def parse_expectation(
         expected = match.group(1)
         return OutputExpectation(expected=expected, line_number=line_number)
     if match := re.search(EXPECTED_SYNTAX_ERROR_REGEX, line):
-        line_number_match = match.groupdict()["line_number"] or line_number
+        line_number_match = match.groupdict()["line_number"]
         expected_line_number = (
             int(line_number_match) if line_number_match else line_number
         )
@@ -134,8 +139,31 @@ def verify_syntax_error_expectations(
     error_lines: list[str],
     syntax_error_expectations: list[SyntaxErrorExpectation],
 ) -> list[Failure]:
-    # TODO: implement
-    return []
+    expected_errors = {
+        f"[line {expectation.line_number}] {expectation.expected}"
+        for expectation in syntax_error_expectations
+    }
+
+    found_errors: typing.Set[str] = set()
+
+    failures: list[Failure] = []
+
+    for error_line in error_lines:
+        if re.search(SYNTAX_ERROR_REGEX, error_line):
+            if error_line in expected_errors:
+                found_errors.add(error_line)
+            else:
+                failure = Failure(f"Unexpected syntax error: {error_line}")
+                failures.append(failure)
+        elif error_line != "":
+            failure = Failure(f"Unexpected output on stderr: {error_line}")
+            failures.append(failure)
+
+    for expected_error in expected_errors.difference(found_errors):
+        failure = Failure(f"Missing expected syntax error: {expected_error}")
+        failures.append(failure)
+
+    return failures
 
 
 def verify_output_expectations(
@@ -150,7 +178,7 @@ def verify_output_expectations(
     return [
         failure
         for actual, expectation in zip(output_lines, output_expectations)
-        if (failure := run_output_expectation(actual, expectation))
+        if (failure := verify_output_expectation(actual, expectation))
     ]
 
 
@@ -167,7 +195,7 @@ def verify_exit_code(
         return []
 
 
-def run_expectations(
+def verify_expectations(
     stdout: str,
     stderr: str,
     exit_code: int,
@@ -193,17 +221,19 @@ def run_expectations(
         return validation_failures
 
     if syntax_error_expectations:
-        exit_code_failures = verify_exit_code(exit_code, 65)
         syntax_error_expectation_failures = verify_syntax_error_expectations(
             error_lines, syntax_error_expectations
         )
-        return syntax_error_expectation_failures + exit_code_failures
 
-    exit_code_failures = verify_exit_code(exit_code, 0)
+        exit_code_failures = verify_exit_code(exit_code, 65)
+
+        return syntax_error_expectation_failures + exit_code_failures
 
     output_expectation_failures = verify_output_expectations(
         output_lines, output_expectations
     )
+
+    exit_code_failures = verify_exit_code(exit_code, 0)
 
     return output_expectation_failures + exit_code_failures
 
@@ -213,7 +243,7 @@ def run_test(path: str) -> Test:
         expectations = [
             expectation
             for line_number, line in enumerate(reader)
-            if (expectation := parse_expectation(line, line_number))
+            if (expectation := parse_expectation(line, line_number + 1))
         ]
 
         # Assumes release build of clox (or at least no debug output).
@@ -221,7 +251,7 @@ def run_test(path: str) -> Test:
             ["./clox", path], capture_output=True, text=True
         )
 
-        failures = run_expectations(
+        failures = verify_expectations(
             process.stdout, process.stderr, process.returncode, expectations
         )
 
