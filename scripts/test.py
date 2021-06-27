@@ -9,6 +9,7 @@ import typing
 # TODO:
 # - Support only running certain tests
 # - Support choosing an interpreter
+# - Add flag for condensed/verbose output
 
 # Assumes cwd is project root.
 TEST_PATH: typing.Final = "test/**/*.lox"
