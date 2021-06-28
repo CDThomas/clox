@@ -208,15 +208,19 @@ def verify_runtime_error_expectations(
     stack_trace_lines = error_lines[1:]
 
     stack_trace_match = next(
-        stack_trace_match
-        for line in stack_trace_lines
-        if (stack_trace_match := re.search(STACK_TRACE_REGEX, line))
+        (
+            stack_trace_match
+            for line in stack_trace_lines
+            if (stack_trace_match := re.search(STACK_TRACE_REGEX, line))
+        ),
+        None,
     )
 
     if not stack_trace_match:
         failures.append(
             Failure(f"Expected stack trace and got:\n{stack_trace_lines}")
         )
+        return failures
 
     actual_stack_trace_line_number = int(stack_trace_match.group(1))
     expected_stack_trace_line_number = runtime_error_expectation.line_number
