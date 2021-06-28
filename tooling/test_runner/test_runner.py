@@ -1,11 +1,10 @@
 import glob
-import os
 import subprocess
 import sys
 import typing
 
 from tooling.test_runner import expectations
-from tooling.test_runner import terminal
+from tooling.test_runner import ui
 
 # TODO:
 # - Support only running certain tests
@@ -50,41 +49,11 @@ def summarize(tests: list[Test]) -> Summary:
     )
 
 
-def summary_line(summary: Summary) -> str:
-    label_text = terminal.bold("Tests:")
-    passed_text = terminal.green(f"{summary.passed_count} passed")
-    failed_text = terminal.red(f"{summary.failed_count} failed")
-    total_text = f"{summary.total_count} total"
-
-    if summary.failed_count:
-        return f"{label_text} {passed_text}, {failed_text}, {total_text}"
-    else:
-        return f"{label_text} {passed_text}, {total_text}"
-
-
-def test_status_text(test: Test) -> str:
-    if test.failures:
-        return terminal.red_background(" FAIL ")
-    else:
-        return terminal.green_background(" PASS ")
-
-
-def print_results(tests: list[Test], summary: Summary) -> None:
-    for test in tests:
-        print(f"{test_status_text(test)} {os.path.relpath(test.path)}")
-
-        for failure in test.failures:
-            print(f"  {failure.message}\n")
-
-    print()
-    print(summary_line(summary))
-
-
 def run_tests() -> None:
     tests = [run_test(path) for path in glob.iglob(TEST_PATH, recursive=True)]
     summary = summarize(tests)
 
-    print_results(tests, summary)
+    ui.print_results(tests, summary)
 
     if summary.failed_count:
         sys.exit(1)

@@ -37,30 +37,13 @@ class Failure(typing.NamedTuple):
 
 
 def verify_expectations(
-    stdout: str,
-    stderr: str,
-    exit_code: int,
-    path: str
-    # expectations: list[Expectation],
+    stdout: str, stderr: str, exit_code: int, path: str
 ) -> list[Failure]:
-    with open(path, "r") as reader:
-        expectations = [
-            expectation
-            for line_number, line in enumerate(reader)
-            if (expectation := _parse_expectation(line, line_number + 1))
-        ]
-
-    output_expectations: list[OutputExpectation] = []
-    runtime_error_expectations: list[RuntimeErrorExpectation] = []
-    syntax_error_expectations: list[SyntaxErrorExpectation] = []
-
-    for expectation in expectations:
-        if type(expectation) is OutputExpectation:
-            output_expectations.append(expectation)
-        elif type(expectation) is RuntimeErrorExpectation:
-            runtime_error_expectations.append(expectation)
-        elif type(expectation) is SyntaxErrorExpectation:
-            syntax_error_expectations.append(expectation)
+    (
+        output_expectations,
+        runtime_error_expectations,
+        syntax_error_expectations,
+    ) = _parse_expectations(path)
 
     output_lines = stdout.splitlines()
     error_lines = stderr.splitlines()
@@ -74,15 +57,9 @@ def verify_expectations(
     if validation_failures:
         return validation_failures
 
-    expected_exit_code: int
-    if runtime_error_expectations:
-        expected_exit_code = 70
-    elif syntax_error_expectations:
-        expected_exit_code = 65
-    else:
-        expected_exit_code = 0
-
-    exit_code_failures = _verify_exit_code(exit_code, expected_exit_code)
+    exit_code_failures = _verify_exit_code(
+        exit_code, syntax_error_expectations, runtime_error_expectations
+    )
 
     runtime_error_expectation_failures: list[Failure] = []
 
@@ -111,6 +88,39 @@ def verify_expectations(
     )
 
 
+def _parse_expectations(
+    path: str,
+) -> tuple[
+    list[OutputExpectation],
+    list[RuntimeErrorExpectation],
+    list[SyntaxErrorExpectation],
+]:
+    with open(path, "r") as reader:
+        expectations = [
+            expectation
+            for line_number, line in enumerate(reader)
+            if (expectation := _parse_expectation(line, line_number + 1))
+        ]
+
+    output_expectations: list[OutputExpectation] = []
+    runtime_error_expectations: list[RuntimeErrorExpectation] = []
+    syntax_error_expectations: list[SyntaxErrorExpectation] = []
+
+    for expectation in expectations:
+        if type(expectation) is OutputExpectation:
+            output_expectations.append(expectation)
+        elif type(expectation) is RuntimeErrorExpectation:
+            runtime_error_expectations.append(expectation)
+        elif type(expectation) is SyntaxErrorExpectation:
+            syntax_error_expectations.append(expectation)
+
+    return (
+        output_expectations,
+        runtime_error_expectations,
+        syntax_error_expectations,
+    )
+
+
 def _parse_expectation(
     line: str, line_number: int
 ) -> typing.Optional[Expectation]:
@@ -136,20 +146,6 @@ def _parse_expectation(
 
     else:
         return None
-
-
-def _verify_output_expectation(
-    actual: str, expectation: OutputExpectation
-) -> typing.Optional[Failure]:
-    if actual == expectation.expected:
-        return None
-    else:
-        message = (
-            f"Line {expectation.line_number}: "
-            f"expected {expectation.expected}, got {actual}."
-        )
-
-        return Failure(message)
 
 
 def _validate_expectations(
@@ -271,9 +267,33 @@ def _verify_output_expectations(
     ]
 
 
+def _verify_output_expectation(
+    actual: str, expectation: OutputExpectation
+) -> typing.Optional[Failure]:
+    if actual == expectation.expected:
+        return None
+    else:
+        message = (
+            f"Line {expectation.line_number}: "
+            f"expected {expectation.expected}, got {actual}."
+        )
+
+        return Failure(message)
+
+
 def _verify_exit_code(
-    actual_exit_code: int, expected_exit_code: int
+    actual_exit_code: int,
+    syntax_error_expectations: list[SyntaxErrorExpectation],
+    runtime_error_expectations: list[RuntimeErrorExpectation],
 ) -> list[Failure]:
+    expected_exit_code: int
+    if runtime_error_expectations:
+        expected_exit_code = 70
+    elif syntax_error_expectations:
+        expected_exit_code = 65
+    else:
+        expected_exit_code = 0
+
     if actual_exit_code != expected_exit_code:
         message = (
             f"Expected interpreter exit code to be {expected_exit_code} "
