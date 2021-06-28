@@ -20,6 +20,6 @@ clean:
 
 # Run all tests for clox
 test: clox
-	python -m tooling.test_runner.test_runner
+	python -m tooling.test_runner.cli
 
 .PHONY: clean clox debug test
