@@ -2,6 +2,8 @@ import enum
 
 
 class Ansi_Code(enum.Enum):
+    value: str
+
     RESET = "\u001b[0m"
     REVERSED = "\u001b[7m"
     BOLD = "\u001b[1m"
