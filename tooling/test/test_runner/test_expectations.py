@@ -178,3 +178,130 @@ false
     )
 
     assert actual_failures == expected_failures
+
+
+def test_verify_expectations_with_syntax_error_and_output_expectations(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+print true; // expect: true
+
+// [line 5] Error: Unterminated string.
+"this string has no close quote
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = """\
+[line 5] Error: Unterminated string.
+"""
+    exit_code = 0
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(
+            message="Can't expect both syntax errors and output"
+        )
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_verify_expectations_with_syntax_and_runtime_error_expectations(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+unknown = "what"; // expect runtime error: Undefined variable 'unknown'.
+
+// [line 5] Error: Unterminated string.
+"this string has no close quote
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = """\
+[line 5] Error: Unterminated string.
+"""
+    exit_code = 0
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(
+            message="Can't expect both syntax errors and runtime errors."
+        )
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_verify_expectations_with_multiple_runtime_error_expectations(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+unknown = "what"; // expect runtime error: Undefined variable 'unknown'.
+huh = "what"; // expect runtime error: Undefined variable 'huh'.
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = """\
+Undefined variable 'unknown'.
+[line 1] in script
+"""
+    exit_code = 0
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(
+            message="Can't expect more than one runtime error."
+        )
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_verify_expectations_with_output_expectations_and_wrong_exit_code(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+print true; // expect: true
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = """\
+true
+"""
+    stderr = ""
+    exit_code = 1
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(
+            message="Expected interpreter exit code to be 0 but received 1"
+        )
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+# TODO: pick up with adding test for syntax and runtime error expectations
