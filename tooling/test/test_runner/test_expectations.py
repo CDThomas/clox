@@ -304,4 +304,150 @@ true
     assert actual_failures == expected_failures
 
 
-# TODO: pick up with adding test for syntax and runtime error expectations
+def test_verify_expectations_with_passing_runtime_error_expectation(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+unknown = "what"; // expect runtime error: Undefined variable 'unknown'.
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = """\
+Undefined variable 'unknown'.
+[line 1] in script
+"""
+    exit_code = 70
+
+    expected_failures: list[expectations.Failure] = []
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_verify_expectations_with_runtime_error_expectation_and_empty_stderr(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+unknown = "what"; // expect runtime error: Undefined variable 'unknown'.
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = ""
+    exit_code = 70
+
+    message = (
+        "Expected runtime error 'Undefined variable 'unknown'.' and got none."
+    )
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(message)
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_verify_expectations_with_runtime_error_expectation_and_wrong_stderr(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+unknown = "what"; // expect runtime error: Undefined variable 'unknown'.
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = """\
+Different runtime error.
+[line 1] in script
+"""
+    exit_code = 70
+
+    message = (
+        "Expected runtime error 'Undefined variable 'unknown'.' "
+        "and got 'Different runtime error.'"
+    )
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(message)
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_verify_expectations_with_runtime_error_expectation_and_no_stacktrace(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+unknown = "what"; // expect runtime error: Undefined variable 'unknown'.
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = """\
+Undefined variable 'unknown'.
+Stack trace should be here.
+"""
+    exit_code = 70
+
+    message = "Expected stack trace and got: ['Stack trace should be here.']"
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(message)
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_verify_expectations_with_runtime_error_expectation_on_wrong_line(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+unknown = "what";
+// expect runtime error: Undefined variable 'unknown'.
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = """\
+Undefined variable 'unknown'.
+[line 1] in script
+"""
+    exit_code = 70
+
+    message = "Expected runtime error on line 2 but was on line 1."
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(message)
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
