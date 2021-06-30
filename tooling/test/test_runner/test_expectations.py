@@ -629,3 +629,151 @@ def test_verify_expectations_with_syntax_error_expectation_and_wrong_exit_code(
     )
 
     assert actual_failures == expected_failures
+
+
+def test_verify_expectations_with_multiple_passing_syntax_error_expectations(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+// [line 3] Error at '{': Expect expression.
+// [line 3] Error at ')': Expect ';' after expression.
+for (var a = 1; {}; a = a + 1) {}
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = """\
+[line 3] Error at '{': Expect expression.
+[line 3] Error at ')': Expect ';' after expression.
+"""
+    exit_code = 65
+
+    expected_failures: list[expectations.Failure] = []
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_passing_output_and_runtime_error_expectations(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+print true; // expect: true
+unknown = 1; // expect runtime error: Undefined variable 'unknown'.
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = """\
+true
+"""
+    stderr = """\
+Undefined variable 'unknown'.
+[line 2] in script
+"""
+    exit_code = 70
+
+    expected_failures: list[expectations.Failure] = []
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_wrong_exit_code_and_failing_output_expectation(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+print true; // expect: true
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = ""
+    exit_code = 1
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(message="Missing expected output on stdout."),
+        expectations.Failure(
+            message="Expected interpreter exit code to be 0 but received 1"
+        ),
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_wrong_exit_code_and_failing_runtime_error_expectation(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+unknown = "what"; // expect runtime error: Undefined variable 'unknown'.
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = ""
+    exit_code = 0
+
+    message_one = (
+        "Expected runtime error 'Undefined variable 'unknown'.' and got none."
+    )
+    message_two = "Expected interpreter exit code to be 70 but received 0"
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(message_one),
+        expectations.Failure(message_two),
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_wrong_exit_code_and_failing_syntax_error_expectation(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+// [line 2] Error: Unterminated string.
+"this string has no close quote
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = ""
+    exit_code = 0
+
+    message_one = (
+        "Missing expected syntax error: [line 2] Error: Unterminated string."
+    )
+    message_two = "Expected interpreter exit code to be 65 but received 0"
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(message_one),
+        expectations.Failure(message_two),
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
