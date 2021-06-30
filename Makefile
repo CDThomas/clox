@@ -19,7 +19,14 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 # Run all tests for clox
-test: clox
-	python scripts/test.py
+test_clox: clox
+	python -m tooling.test_runner.cli
+
+# Run tests for tooling
+test_tooling:
+	poetry run pytest tooling/test
+
+# Run all tests for clox and tooling
+test: test_clox test_tooling
 
 .PHONY: clean clox debug test
