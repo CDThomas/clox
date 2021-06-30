@@ -451,3 +451,181 @@ Undefined variable 'unknown'.
     )
 
     assert actual_failures == expected_failures
+
+
+def test_verify_expectations_with_runtime_error_and_wrong_exit_code(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+unknown = "what"; // expect runtime error: Undefined variable 'unknown'.
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = """\
+Undefined variable 'unknown'.
+[line 1] in script
+"""
+    exit_code = 0
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(
+            message="Expected interpreter exit code to be 70 but received 0"
+        )
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_verify_expectations_with_passing_syntax_error_expectation(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+// [line 2] Error: Unterminated string.
+"this string has no close quote
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = """\
+[line 2] Error: Unterminated string.
+"""
+    exit_code = 65
+
+    expected_failures: list[expectations.Failure] = []
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_verify_expectations_with_syntax_error_expectation_and_extra_err(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+// [line 2] Error: Unterminated string.
+"this string has no close quote
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = """\
+[line 2] Error: Unterminated string.
+[line 3] Error: different error.
+"""
+    exit_code = 65
+
+    message = "Unexpected syntax error: [line 3] Error: different error."
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(message)
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_verify_expectations_with_syntax_error_expectation_and_wrong_stderr(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+// [line 2] Error: Unterminated string.
+"this string has no close quote
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = """\
+[line 2] Error: Unterminated string.
+Extra output
+"""
+    exit_code = 65
+
+    message = "Unexpected output on stderr: Extra output"
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(message)
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_verify_expectations_with_syntax_error_expectation_and_no_stderr(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+// [line 2] Error: Unterminated string.
+"this string has no close quote
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = ""
+    exit_code = 65
+
+    message = (
+        "Missing expected syntax error: [line 2] Error: Unterminated string."
+    )
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(message)
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_verify_expectations_with_syntax_error_expectation_and_wrong_exit_code(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+// [line 2] Error: Unterminated string.
+"this string has no close quote
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = """\
+[line 2] Error: Unterminated string.
+"""
+    exit_code = 70
+
+    message = "Expected interpreter exit code to be 65 but received 70"
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(message)
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
