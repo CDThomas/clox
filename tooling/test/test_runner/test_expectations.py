@@ -3,7 +3,7 @@ import pathlib
 from tooling.test_runner import expectations
 
 
-def test_verify_expectations_with_empty_input(tmp_path: pathlib.Path):
+def test_empty_input(tmp_path: pathlib.Path):
     path = tmp_path / "test.lox"
     path.write_text("")
 
@@ -20,7 +20,7 @@ def test_verify_expectations_with_empty_input(tmp_path: pathlib.Path):
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_passing_output_expectation(
+def test_passing_output_expectation(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -45,7 +45,7 @@ true
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_multiple_passing_output_expectations(
+def test_multiple_passing_output_expectations(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -72,7 +72,7 @@ false
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_output_expectations_and_empty_std_out(
+def test_output_expectations_and_empty_std_out(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -97,7 +97,7 @@ print true; // expect: true
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_no_output_expectations_and_nonempty_std_out(
+def test_no_output_expectations_and_nonempty_std_out(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -124,7 +124,7 @@ true
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_failing_output_expectation(
+def test_failing_output_expectation(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -151,7 +151,7 @@ false
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_failing_and_passing_output_expectations(
+def test_failing_and_passing_output_expectations(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -180,7 +180,7 @@ false
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_syntax_error_and_output_expectations(
+def test_syntax_error_and_output_expectations(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -212,7 +212,7 @@ print true; // expect: true
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_syntax_and_runtime_error_expectations(
+def test_syntax_and_runtime_error_expectations(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -244,7 +244,7 @@ unknown = "what"; // expect runtime error: Undefined variable 'unknown'.
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_multiple_runtime_error_expectations(
+def test_multiple_runtime_error_expectations(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -275,7 +275,7 @@ Undefined variable 'unknown'.
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_output_expectations_and_wrong_exit_code(
+def test_output_expectations_and_wrong_exit_code(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -304,7 +304,7 @@ true
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_passing_runtime_error_expectation(
+def test_passing_runtime_error_expectation(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -330,7 +330,7 @@ Undefined variable 'unknown'.
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_runtime_error_expectation_and_empty_stderr(
+def test_runtime_error_expectation_and_empty_stderr(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -359,7 +359,7 @@ unknown = "what"; // expect runtime error: Undefined variable 'unknown'.
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_runtime_error_expectation_and_wrong_stderr(
+def test_runtime_error_expectation_and_wrong_stderr(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -392,7 +392,7 @@ Different runtime error.
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_runtime_error_expectation_and_no_stacktrace(
+def test_runtime_error_expectation_and_no_stacktrace(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -422,7 +422,7 @@ Stack trace should be here.
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_runtime_error_expectation_on_wrong_line(
+def test_runtime_error_expectation_on_wrong_line(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -453,7 +453,7 @@ Undefined variable 'unknown'.
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_runtime_error_and_wrong_exit_code(
+def test_runtime_error_and_wrong_exit_code(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -483,7 +483,7 @@ Undefined variable 'unknown'.
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_passing_syntax_error_expectation(
+def test_passing_syntax_error_expectation(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -509,7 +509,7 @@ def test_verify_expectations_with_passing_syntax_error_expectation(
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_syntax_error_expectation_and_extra_err(
+def test_syntax_error_expectation_and_extra_err(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -540,7 +540,7 @@ def test_verify_expectations_with_syntax_error_expectation_and_extra_err(
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_syntax_error_expectation_and_wrong_stderr(
+def test_syntax_error_expectation_and_wrong_stderr(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -571,7 +571,7 @@ Extra output
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_syntax_error_expectation_and_no_stderr(
+def test_syntax_error_expectation_and_no_stderr(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -601,7 +601,7 @@ def test_verify_expectations_with_syntax_error_expectation_and_no_stderr(
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_syntax_error_expectation_and_wrong_exit_code(
+def test_syntax_error_expectation_and_wrong_exit_code(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
@@ -631,7 +631,7 @@ def test_verify_expectations_with_syntax_error_expectation_and_wrong_exit_code(
     assert actual_failures == expected_failures
 
 
-def test_verify_expectations_with_multiple_passing_syntax_error_expectations(
+def test_multiple_passing_syntax_error_expectations(
     tmp_path: pathlib.Path,
 ):
     lox_file_content = """\
