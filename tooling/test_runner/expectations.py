@@ -232,7 +232,7 @@ def _verify_runtime_error_expectations(
 
     if not stack_trace_match:
         failures.append(
-            Failure(f"Expected stack trace and got:\n{stack_trace_lines}")
+            Failure(f"Expected stack trace and got: {stack_trace_lines}")
         )
         return failures
 
@@ -241,8 +241,8 @@ def _verify_runtime_error_expectations(
 
     if actual_stack_trace_line_number != expected_stack_trace_line_number:
         message = (
-            f"Expected runtime error on line {actual_stack_trace_line_number}"
-            f" but was on line {expected_stack_trace_line_number}."
+            f"Expected runtime error on line {expected_stack_trace_line_number}"
+            f" but was on line {actual_stack_trace_line_number}."
         )
         failures.append(Failure(message))
 
