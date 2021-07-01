@@ -275,6 +275,44 @@ Undefined variable 'unknown'.
     assert actual_failures == expected_failures
 
 
+def test_multiple_expectation_validation_failures(
+    tmp_path: pathlib.Path,
+):
+    lox_file_content = """\
+print true; // expect: true
+unknown = "what"; // expect runtime error: Undefined variable 'unknown'.
+huh = "what"; // expect runtime error: Undefined variable 'huh'.
+
+// [line 5] Error: Unterminated string.
+"this string has no close quote
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = ""
+    stderr = ""
+    exit_code = 0
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(
+            message="Can't expect both syntax errors and output"
+        ),
+        expectations.Failure(
+            message="Can't expect both syntax errors and runtime errors."
+        ),
+        expectations.Failure(
+            message="Can't expect more than one runtime error."
+        ),
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
 def test_output_expectations_and_wrong_exit_code(
     tmp_path: pathlib.Path,
 ):
@@ -770,6 +808,60 @@ def test_wrong_exit_code_and_failing_syntax_error_expectation(
     expected_failures: list[expectations.Failure] = [
         expectations.Failure(message_one),
         expectations.Failure(message_two),
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_no_expectations_and_nonempty_stderr(
+    tmp_path: pathlib.Path,
+):
+    path = tmp_path / "test.lox"
+    path.write_text("")
+
+    stdout = ""
+    stderr = """\
+Error: some error.
+"""
+    exit_code = 0
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(
+            "Received unexpected output on stderr: ['Error: some error.']"
+        )
+    ]
+
+    actual_failures = expectations.verify_expectations(
+        stdout=stdout, stderr=stderr, exit_code=exit_code, path=str(path)
+    )
+
+    assert actual_failures == expected_failures
+
+
+def test_only_output_expectations_and_nonempty_stderr(tmp_path: pathlib.Path):
+    lox_file_content = """\
+print true; // expect: true
+"""
+
+    path = tmp_path / "test.lox"
+    path.write_text(lox_file_content)
+
+    stdout = """\
+true
+"""
+    stderr = """\
+Error: some error.
+"""
+    exit_code = 0
+
+    expected_failures: list[expectations.Failure] = [
+        expectations.Failure(
+            "Received unexpected output on stderr: ['Error: some error.']"
+        )
     ]
 
     actual_failures = expectations.verify_expectations(

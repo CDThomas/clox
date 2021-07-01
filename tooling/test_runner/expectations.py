@@ -61,7 +61,15 @@ def verify_expectations(
         exit_code, syntax_error_expectations, runtime_error_expectations
     )
 
-    runtime_error_expectation_failures: list[Failure] = []
+    if syntax_error_expectations:
+        syntax_error_expectation_failures = _verify_syntax_error_expectations(
+            error_lines, syntax_error_expectations
+        )
+        return syntax_error_expectation_failures + exit_code_failures
+
+    output_expectation_failures = _verify_output_expectations(
+        output_lines, output_expectations
+    )
 
     if runtime_error_expectations:
         runtime_error_expectation_failures = (
@@ -69,21 +77,17 @@ def verify_expectations(
                 error_lines, runtime_error_expectations
             )
         )
-    else:
-        syntax_error_expectation_failures = _verify_syntax_error_expectations(
-            error_lines, syntax_error_expectations
+        return (
+            output_expectation_failures
+            + runtime_error_expectation_failures
+            + exit_code_failures
         )
 
-        if syntax_error_expectation_failures:
-            return syntax_error_expectation_failures + exit_code_failures
-
-    output_expectation_failures = _verify_output_expectations(
-        output_lines, output_expectations
-    )
+    unexpected_stderr_failures = _verify_empty_stderr(error_lines)
 
     return (
         output_expectation_failures
-        + runtime_error_expectation_failures
+        + unexpected_stderr_failures
         + exit_code_failures
     )
 
@@ -153,14 +157,20 @@ def _validate_expectations(
     runtime_error_expectations: list[RuntimeErrorExpectation],
     syntax_error_expectations: list[SyntaxErrorExpectation],
 ) -> list[Failure]:
+    failures: list[Failure] = []
+
     if syntax_error_expectations and output_expectations:
-        return [Failure("Can't expect both syntax errors and output")]
+        failures.append(Failure("Can't expect both syntax errors and output"))
+
     if syntax_error_expectations and runtime_error_expectations:
-        return [Failure("Can't expect both syntax errors and runtime errors.")]
-    elif len(runtime_error_expectations) > 1:
-        return [Failure("Can't expect more than one runtime error.")]
-    else:
-        return []
+        failures.append(
+            Failure("Can't expect both syntax errors and runtime errors.")
+        )
+
+    if len(runtime_error_expectations) > 1:
+        failures.append(Failure("Can't expect more than one runtime error."))
+
+    return failures
 
 
 def _verify_syntax_error_expectations(
@@ -177,15 +187,15 @@ def _verify_syntax_error_expectations(
     failures: list[Failure] = []
 
     for error_line in error_lines:
-        if re.search(SYNTAX_ERROR_REGEX, error_line):
-            if error_line in expected_errors:
-                found_errors.add(error_line)
-            else:
-                failure = Failure(f"Unexpected syntax error: {error_line}")
-                failures.append(failure)
+        is_syntax_error = bool(re.search(SYNTAX_ERROR_REGEX, error_line))
+        is_expected_error = error_line in expected_errors
+
+        if is_syntax_error and is_expected_error:
+            found_errors.add(error_line)
+        elif is_syntax_error:
+            failure = Failure(f"Unexpected syntax error: {error_line}")
+            failures.append(failure)
         elif error_line != "":
-            # TODO: this fallthrough is confusing since it handles unexpected
-            # runtime errors too. Should prob move this up a level.
             failure = Failure(f"Unexpected output on stderr: {error_line}")
             failures.append(failure)
 
@@ -198,10 +208,12 @@ def _verify_syntax_error_expectations(
 
 def _verify_runtime_error_expectations(
     error_lines: list[str],
-    # TODO: don't really need to use a list for runtime_error_expectations here
     runtime_error_expectations: list[RuntimeErrorExpectation],
 ) -> list[Failure]:
+    # There will only be one runtime error expectation here since errors have
+    # already been validated.
     runtime_error_expectation = runtime_error_expectations[0]
+
     if len(error_lines) < 2:
         message = (
             "Expected runtime error "
@@ -252,8 +264,6 @@ def _verify_runtime_error_expectations(
 def _verify_output_expectations(
     output_lines: list[str], output_expectations: list[OutputExpectation]
 ) -> list[Failure]:
-    # TODO: it's possibly confusing that this is here vs in the
-    # _validate_expectations func
     if len(output_lines) > len(output_expectations):
         return [Failure("Recieved extra output on stdout.")]
 
@@ -300,5 +310,14 @@ def _verify_exit_code(
             f"but received {actual_exit_code}"
         )
         return [Failure(message)]
+    else:
+        return []
+
+
+def _verify_empty_stderr(error_lines: list[str]) -> list[Failure]:
+    if error_lines:
+        return [
+            Failure(f"Received unexpected output on stderr: {error_lines}")
+        ]
     else:
         return []
