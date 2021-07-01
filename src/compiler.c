@@ -346,7 +346,7 @@ static void printStatement() {
 static void synchronize() {
   parser.panicMode = false;
 
-  while (parser.current.type == TOKEN_EOF) {
+  while (parser.current.type != TOKEN_EOF) {
     if (parser.previous.type == TOKEN_SEMICOLON) return;
     switch (parser.current.type) {
       case TOKEN_CLASS:
