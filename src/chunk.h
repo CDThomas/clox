@@ -11,9 +11,11 @@ typedef enum {
   OP_TRUE,
   OP_FALSE,
   OP_POP,
+  OP_GET_LOCAL,
   OP_GET_GLOBAL,
   OP_DEFINE_GLOBAL,
   OP_SET_GLOBAL,
+  OP_SET_LOCAL,
   OP_EQUAL, // comparison: `1 == 1`
   OP_GREATER, // comparison: `2 > 1`
   OP_LESS, // comparison: `1 < 2`
