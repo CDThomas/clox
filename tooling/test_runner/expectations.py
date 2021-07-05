@@ -10,30 +10,30 @@ SYNTAX_ERROR_REGEX: typing.Final = r"^\[line \d+\] Error.+"
 STACK_TRACE_REGEX: typing.Final = r"^\[line (\d+)\]"
 
 
-class OutputExpectation(typing.NamedTuple):
-    expected: str
-    line_number: int
-
-
-class RuntimeErrorExpectation(typing.NamedTuple):
-    expected: str
-    line_number: int
-
-
-class SyntaxErrorExpectation(typing.NamedTuple):
-    expected: str
-    line_number: int
-
-
-Expectation = typing.Union[
-    OutputExpectation,
-    RuntimeErrorExpectation,
-    SyntaxErrorExpectation,
-]
-
-
 class Failure(typing.NamedTuple):
     message: str
+
+
+class _OutputExpectation(typing.NamedTuple):
+    expected: str
+    line_number: int
+
+
+class _RuntimeErrorExpectation(typing.NamedTuple):
+    expected: str
+    line_number: int
+
+
+class _SyntaxErrorExpectation(typing.NamedTuple):
+    expected: str
+    line_number: int
+
+
+_Expectation = typing.Union[
+    _OutputExpectation,
+    _RuntimeErrorExpectation,
+    _SyntaxErrorExpectation,
+]
 
 
 def verify_expectations(
@@ -95,9 +95,9 @@ def verify_expectations(
 def _parse_expectations(
     path: str,
 ) -> tuple[
-    list[OutputExpectation],
-    list[RuntimeErrorExpectation],
-    list[SyntaxErrorExpectation],
+    list[_OutputExpectation],
+    list[_RuntimeErrorExpectation],
+    list[_SyntaxErrorExpectation],
 ]:
     with open(path, "r") as reader:
         expectations = [
@@ -106,16 +106,16 @@ def _parse_expectations(
             if (expectation := _parse_expectation(line, line_number + 1))
         ]
 
-    output_expectations: list[OutputExpectation] = []
-    runtime_error_expectations: list[RuntimeErrorExpectation] = []
-    syntax_error_expectations: list[SyntaxErrorExpectation] = []
+    output_expectations: list[_OutputExpectation] = []
+    runtime_error_expectations: list[_RuntimeErrorExpectation] = []
+    syntax_error_expectations: list[_SyntaxErrorExpectation] = []
 
     for expectation in expectations:
-        if type(expectation) is OutputExpectation:
+        if type(expectation) is _OutputExpectation:
             output_expectations.append(expectation)
-        elif type(expectation) is RuntimeErrorExpectation:
+        elif type(expectation) is _RuntimeErrorExpectation:
             runtime_error_expectations.append(expectation)
-        elif type(expectation) is SyntaxErrorExpectation:
+        elif type(expectation) is _SyntaxErrorExpectation:
             syntax_error_expectations.append(expectation)
 
     return (
@@ -127,10 +127,10 @@ def _parse_expectations(
 
 def _parse_expectation(
     line: str, line_number: int
-) -> typing.Optional[Expectation]:
+) -> typing.Optional[_Expectation]:
     if match := re.search(EXPECTED_OUTPUT_REGEX, line):
         expected = match.group(1)
-        return OutputExpectation(expected=expected, line_number=line_number)
+        return _OutputExpectation(expected=expected, line_number=line_number)
 
     elif match := re.search(EXPECTED_SYNTAX_ERROR_REGEX, line):
         line_number_match = match.groupdict()["line_number"]
@@ -138,13 +138,13 @@ def _parse_expectation(
             int(line_number_match) if line_number_match else line_number
         )
         expected = match.groupdict()["error"]
-        return SyntaxErrorExpectation(
+        return _SyntaxErrorExpectation(
             expected=expected, line_number=expected_line_number
         )
 
     elif match := re.search(EXPECTED_RUNTIME_ERROR_REGEX, line):
         expected = match.group(1)
-        return RuntimeErrorExpectation(
+        return _RuntimeErrorExpectation(
             expected=expected, line_number=line_number
         )
 
@@ -153,9 +153,9 @@ def _parse_expectation(
 
 
 def _validate_expectations(
-    output_expectations: list[OutputExpectation],
-    runtime_error_expectations: list[RuntimeErrorExpectation],
-    syntax_error_expectations: list[SyntaxErrorExpectation],
+    output_expectations: list[_OutputExpectation],
+    runtime_error_expectations: list[_RuntimeErrorExpectation],
+    syntax_error_expectations: list[_SyntaxErrorExpectation],
 ) -> list[Failure]:
     failures: list[Failure] = []
 
@@ -175,7 +175,7 @@ def _validate_expectations(
 
 def _verify_syntax_error_expectations(
     error_lines: list[str],
-    syntax_error_expectations: list[SyntaxErrorExpectation],
+    syntax_error_expectations: list[_SyntaxErrorExpectation],
 ) -> list[Failure]:
     expected_errors = {
         f"[line {expectation.line_number}] {expectation.expected}"
@@ -208,7 +208,7 @@ def _verify_syntax_error_expectations(
 
 def _verify_runtime_error_expectations(
     error_lines: list[str],
-    runtime_error_expectations: list[RuntimeErrorExpectation],
+    runtime_error_expectations: list[_RuntimeErrorExpectation],
 ) -> list[Failure]:
     # There will only be one runtime error expectation here since errors have
     # already been validated.
@@ -262,7 +262,7 @@ def _verify_runtime_error_expectations(
 
 
 def _verify_output_expectations(
-    output_lines: list[str], output_expectations: list[OutputExpectation]
+    output_lines: list[str], output_expectations: list[_OutputExpectation]
 ) -> list[Failure]:
     if len(output_lines) > len(output_expectations):
         return [Failure("Recieved extra output on stdout.")]
@@ -278,7 +278,7 @@ def _verify_output_expectations(
 
 
 def _verify_output_expectation(
-    actual: str, expectation: OutputExpectation
+    actual: str, expectation: _OutputExpectation
 ) -> typing.Optional[Failure]:
     if actual == expectation.expected:
         return None
@@ -293,8 +293,8 @@ def _verify_output_expectation(
 
 def _verify_exit_code(
     actual_exit_code: int,
-    syntax_error_expectations: list[SyntaxErrorExpectation],
-    runtime_error_expectations: list[RuntimeErrorExpectation],
+    syntax_error_expectations: list[_SyntaxErrorExpectation],
+    runtime_error_expectations: list[_RuntimeErrorExpectation],
 ) -> list[Failure]:
     expected_exit_code: int
     if runtime_error_expectations:

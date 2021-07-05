@@ -10,7 +10,6 @@ from tooling.test_runner import term_style
 # TODO:
 # - Support only running certain tests
 # - Support choosing an interpreter
-# - Add flag for condensed/verbose output
 
 # Assumes cwd is project root.
 TEST_PATH: typing.Final = "test/**/*.lox"
@@ -60,7 +59,7 @@ def _summarize(tests: list[Test]) -> Summary:
     )
 
 
-def _summary_line(summary: Summary) -> str:
+def _summary_text(summary: Summary) -> str:
     label_text = term_style.bold("Tests:")
     passed_text = term_style.green(f"{summary.passed_count} passed")
     failed_text = term_style.red(f"{summary.failed_count} failed")
@@ -72,19 +71,30 @@ def _summary_line(summary: Summary) -> str:
         return f"{label_text} {passed_text}, {total_text}"
 
 
-def _test_status_text(test: Test) -> str:
-    if test.failures:
-        return term_style.red_background(" FAIL ")
-    else:
-        return term_style.green_background(" PASS ")
-
-
 def _print_results(tests: list[Test], summary: Summary) -> None:
     for test in tests:
-        print(f"{_test_status_text(test)} {os.path.relpath(test.path)}")
+        if test.failures:
+            print(term_style.red("F"), end="")
+        else:
+            print(term_style.green("."), end="")
 
-        for failure in test.failures:
-            print(f"  {failure.message}\n")
+    failed_tests = [test for test in tests if test.failures]
+
+    if failed_tests:
+        print()
+        print()
+        print(term_style.bold("Failures:"))
+        print()
+
+        for index, failed_test in enumerate(failed_tests):
+            print(
+                f"{index + 1}) "
+                f"{term_style.red(os.path.relpath(failed_test.path))}"
+            )
+
+            for failure in failed_test.failures:
+                print(f"  {failure.message}")
+                print()
 
     print()
-    print(_summary_line(summary))
+    print(_summary_text(summary))
