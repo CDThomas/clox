@@ -7,13 +7,6 @@ import typing
 from tooling.test_runner import expectations
 from tooling.test_runner import term_style
 
-# TODO:
-# - Support only running certain tests
-# - Support choosing an interpreter
-
-# Assumes cwd is project root.
-TEST_PATH: typing.Final = "test/**/*.lox"
-
 
 class Test(typing.NamedTuple):
     path: str
@@ -26,8 +19,11 @@ class Summary(typing.NamedTuple):
     total_count: int
 
 
-def run_tests() -> None:
-    tests = [_run_test(path) for path in glob.iglob(TEST_PATH, recursive=True)]
+def run_tests(interpreter_path: str, test_pattern: str) -> None:
+    tests = [
+        _run_test(test_path, interpreter_path)
+        for test_path in glob.iglob(test_pattern, recursive=True)
+    ]
     summary = _summarize(tests)
 
     _print_results(tests, summary)
@@ -36,15 +32,17 @@ def run_tests() -> None:
         sys.exit(1)
 
 
-def _run_test(path: str) -> Test:
+def _run_test(test_path: str, interpreter_path: str) -> Test:
     # Assumes release build of clox (or at least no debug output).
-    process = subprocess.run(["./clox", path], capture_output=True, text=True)
-
-    failures = expectations.verify_expectations(
-        process.stdout, process.stderr, process.returncode, path
+    process = subprocess.run(
+        [interpreter_path, test_path], capture_output=True, text=True
     )
 
-    return Test(path=path, failures=failures)
+    failures = expectations.verify_expectations(
+        process.stdout, process.stderr, process.returncode, test_path
+    )
+
+    return Test(path=test_path, failures=failures)
 
 
 def _summarize(tests: list[Test]) -> Summary:
