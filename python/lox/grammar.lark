@@ -1,0 +1,19 @@
+?expression: literal
+          | unary
+          | binary
+          | grouping 
+
+literal: NUMBER | STRING | "true" | "false" | "nil" 
+grouping: "(" expression ")" 
+unary: _unary_operator expression
+binary: expression _binary_operator expression
+
+!_unary_operator: "-" | "!"
+!_binary_operator: "==" | "!=" | "<" | "<=" | ">" | ">=" | "+"  | "-"  | "*" | "/"
+
+// TODO: write own terminals based on Lox grammar instead
+%import common.NUMBER
+%import common.ESCAPED_STRING -> STRING
+
+%import common.WS
+%ignore WS
