@@ -15,6 +15,15 @@ class ToAst(lark.Transformer):
     def NUMBER(self, n):
         return float(n)
 
+    def const_true(self, _):
+        return True
+
+    def const_false(self, _):
+        return False
+
+    def const_nil(self, _):
+        return None
+
 
 parser = lark.Lark.open(
     "./lox/grammar.lark", parser="lalr", start="expression"
