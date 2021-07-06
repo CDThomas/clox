@@ -1,51 +1,43 @@
-import lark
-from lark import ast_utils
+import argparse
 
-import lox.ast
-
-
-class ToAst(lark.Transformer):
-    # Define extra transformation functions, for rules that don't correspond
-    # to an AST class.
-
-    def STRING(self, s):
-        # Remove quotation marks
-        return s[1:-1]
-
-    def NUMBER(self, n):
-        return float(n)
-
-    def const_true(self, _):
-        return True
-
-    def const_false(self, _):
-        return False
-
-    def const_nil(self, _):
-        return None
+from lox import parser
 
 
-parser = lark.Lark.open(
-    "./lox/grammar.lark", parser="lalr", start="expression"
-)
+def main() -> None:
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument(
+        "path", nargs="?", help="path to the Lox file to run"
+    )
+    args = arg_parser.parse_args()
 
-transformer = ast_utils.create_transformer(lox.ast, ToAst())
+    if args.path:
+        _run_file(args.path)
+    else:
+        try:
+            _run_prompt()
+        except KeyboardInterrupt:
+            # Suppress error and exit normally.
+            pass
 
 
-def parse(text):
-    tree = parser.parse(text)
-    return transformer.transform(tree)
+def _run_file(path: str) -> None:
+    with open(path, "r") as reader:
+        _run(reader.read())
 
 
-#
-#   Test
-#
+def _run_prompt() -> None:
+    while True:
+        line = input("> ")
+
+        if line == "":
+            break
+
+        _run(line)
+
+
+def _run(code: str) -> None:
+    print(parser.parse(code))
+
 
 if __name__ == "__main__":
-    print(
-        parse(
-            """\
-(1 + 3) - 2
-"""
-        )
-    )
+    main()

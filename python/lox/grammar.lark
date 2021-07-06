@@ -32,7 +32,7 @@ const_true: "true"
 const_false: "false"
 const_nil: "nil"
 
-// These are here so that token types from Lark have proper names (instead of
+// These are here to give token types from Lark proper names (instead of
 // names like __ANON_0).
 BANG_EQUAL: "!="
 EQUAL_EQUAL: "=="
