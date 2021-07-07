@@ -2,5 +2,11 @@
 
 project_root=$(dirname "$0")
 
-cd ${project_root}/python
-poetry run python -m lox.cli $@
+if [[ $# -eq 1 ]]; then
+    abs_input_file_path="$(cd "$(dirname "$1")"; pwd -P)/$(basename "$1")"
+    cd ${project_root}/python
+    poetry run lox $abs_input_file_path
+else
+    cd ${project_root}/python
+    poetry run lox $@
+fi

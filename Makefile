@@ -19,13 +19,13 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 # Run tests for clox.
-TEST_PATTERN?="test/**/*.lox"
+TEST_PATTERN?="../test/**/*.lox"
 test_clox: clox
-	python -m tooling.test_runner.cli ./clox $(TEST_PATTERN)
+	cd tooling && poetry run test ../clox $(TEST_PATTERN)
 
 # Run tests for tooling.
 test_tooling:
-	poetry run pytest tooling/test
+	cd tooling && poetry run pytest test
 
 # Run all tests for clox and tooling.
 test: test_clox test_tooling

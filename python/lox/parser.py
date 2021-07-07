@@ -26,6 +26,7 @@ class ToAst(lark.Transformer):
         return None
 
 
+# Assumes python/ is cwd
 parser = lark.Lark.open(
     "./lox/grammar.lark", parser="lalr", start="expression"
 )

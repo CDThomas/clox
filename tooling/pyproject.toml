@@ -1,16 +1,21 @@
 [tool.poetry]
-name = "clox"
+name = "tooling"
 version = "0.1.0"
 description = ""
 authors = ["Drew Thomas <cdthomas.92@gmail.com>"]
 license = "MIT"
+packages = [
+    { include = "test_runner" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-lark-parser = "^0.11.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
+
+[tool.poetry.scripts]
+test = "test_runner.cli:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
