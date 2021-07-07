@@ -1,10 +1,10 @@
 import dataclasses
-import lark
+from lark import ast_utils
 
 # TODO: type hints for this module
 
 
-class _Ast(lark.ast_utils.Ast):
+class _Ast(ast_utils.Ast):
     # This will be skipped by create_transformer() because it starts with an
     # underscore.
     pass
