@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+project_root=$(dirname "$0")
+
+cd ${project_root}/python
+poetry run python -m lox.cli $@
