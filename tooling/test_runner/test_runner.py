@@ -4,8 +4,8 @@ import subprocess
 import sys
 import typing
 
-from tooling.test_runner import expectations
-from tooling.test_runner import term_style
+from test_runner import expectations
+from test_runner import term_style
 
 
 class Test(typing.NamedTuple):

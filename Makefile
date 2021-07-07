@@ -6,11 +6,11 @@ default: clox
 
 # Compile a debug build of clox.
 debug:
-	@ $(MAKE) -f util/c.make NAME=cloxd MODE=debug SOURCE_DIR=src
+	@ $(MAKE) -f util/c.make NAME=cloxd MODE=debug SOURCE_DIR=c
 
 # Compile the C interpreter.
 clox:
-	@ $(MAKE) -f util/c.make NAME=clox MODE=release SOURCE_DIR=src
+	@ $(MAKE) -f util/c.make NAME=clox MODE=release SOURCE_DIR=c
 	@ rm -f clox # Nuke the binary before copying (workaround for https://stackoverflow.com/questions/65258043/codesigning-modified-binaries-apple-silicon-m1)
 	@ cp build/clox clox # For convenience, copy the interpreter to the top level.
 
@@ -19,13 +19,13 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 # Run tests for clox.
-TEST_PATTERN?="test/**/*.lox"
+TEST_PATTERN?="../test/**/*.lox"
 test_clox: clox
-	python -m tooling.test_runner.cli ./clox $(TEST_PATTERN)
+	cd tooling && poetry run test ../clox $(TEST_PATTERN)
 
 # Run tests for tooling.
 test_tooling:
-	poetry run pytest tooling/test
+	cd tooling && poetry run pytest test
 
 # Run all tests for clox and tooling.
 test: test_clox test_tooling
