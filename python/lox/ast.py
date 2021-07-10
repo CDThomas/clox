@@ -46,7 +46,7 @@ class Binary(_Expression):
     right: _Expression
 
     def accept(self, visitor):
-        return visitor.visitBinaryExperssion(self)
+        return visitor.visitBinaryExpression(self)
 
 
 @dataclasses.dataclass
@@ -54,4 +54,4 @@ class Grouping(_Expression):
     expression: _Expression
 
     def accept(self, visitor):
-        return visitor.visitGroupingExperssion(self)
+        return visitor.visitGroupingExpression(self)

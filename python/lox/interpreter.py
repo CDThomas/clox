@@ -1,7 +1,6 @@
 import typing
 
 from lox import ast
-from lox import token
 
 Value = typing.Union[str, float, bool]
 
@@ -15,6 +14,7 @@ class Interpreter:
             # TODO: handle runtime errors
             pass
 
+    # TODO: fix casing for visit* methods
     def visitLiteralExpression(
         self, expression: ast.Literal
     ) -> typing.Optional[Value]:
@@ -30,11 +30,44 @@ class Interpreter:
     ) -> typing.Optional[Value]:
         right = self._evaluate(expression.right)
 
-        if expression.operator.type == token.TokenType.BANG.value:
+        if expression.operator.value == "!":
             return not self._is_truthy(right)
-        elif expression.operator.type == token.TokenType.MINUS.value:
+        elif expression.operator.value == "-":
             # TODO: remove cast
             return -typing.cast(float, right)
+
+        # Unreachable.
+        return None
+
+    def visitBinaryExpression(
+        self, expression: ast.Binary
+    ) -> typing.Optional[Value]:
+        left = self._evaluate(expression.left)
+        right = self._evaluate(expression.right)
+
+        op = expression.operator.value
+
+        if op == ">":
+            return left > right
+        elif op == ">=":
+            return left >= right
+        elif op == "<":
+            return left < right
+        elif op == "<=":
+            return left <= right
+        elif op == "-":
+            return left - right
+        elif op == "/":
+            return left / right
+        elif op == "*":
+            return left * right
+        elif op == "==":
+            return left == right
+        elif op == "+":
+            if isinstance(left, float) and isinstance(right, float):
+                return left + right
+            elif isinstance(left, str) and isinstance(right, str):
+                return left + right
 
         # Unreachable.
         return None
