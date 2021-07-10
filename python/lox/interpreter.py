@@ -15,17 +15,17 @@ class Interpreter:
             pass
 
     # TODO: fix casing for visit* methods
-    def visitLiteralExpression(
+    def visit_literal_expression(
         self, expression: ast.Literal
     ) -> typing.Optional[Value]:
         return expression.value
 
-    def visitGroupingExpression(
+    def visit_grouping_expression(
         self, expression: ast.Grouping
     ) -> typing.Optional[Value]:
         return self._evaluate(expression.expression)
 
-    def visitUnaryExpression(
+    def visit_unary_expression(
         self, expression: ast.Unary
     ) -> typing.Optional[Value]:
         right = self._evaluate(expression.right)
@@ -39,7 +39,7 @@ class Interpreter:
         # Unreachable.
         return None
 
-    def visitBinaryExpression(
+    def visit_binary_expression(
         self, expression: ast.Binary
     ) -> typing.Optional[Value]:
         left = self._evaluate(expression.left)

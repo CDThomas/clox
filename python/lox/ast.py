@@ -27,7 +27,7 @@ class Literal(_Expression):
     value: typing.Optional[Value]
 
     def accept(self, visitor):
-        return visitor.visitLiteralExpression(self)
+        return visitor.visit_literal_expression(self)
 
 
 @dataclasses.dataclass
@@ -36,7 +36,7 @@ class Unary(_Expression):
     right: _Expression
 
     def accept(self, visitor):
-        return visitor.visitUnaryExpression(self)
+        return visitor.visit_unary_expression(self)
 
 
 @dataclasses.dataclass
@@ -46,7 +46,7 @@ class Binary(_Expression):
     right: _Expression
 
     def accept(self, visitor):
-        return visitor.visitBinaryExpression(self)
+        return visitor.visit_binary_expression(self)
 
 
 @dataclasses.dataclass
@@ -54,4 +54,4 @@ class Grouping(_Expression):
     expression: _Expression
 
     def accept(self, visitor):
-        return visitor.visitGroupingExpression(self)
+        return visitor.visit_grouping_expression(self)
