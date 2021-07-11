@@ -17,7 +17,6 @@ class Interpreter:
         value = self._evaluate(expression)
         return self._stringify(value)
 
-    # TODO: fix casing for visit* methods
     def visit_literal_expression(
         self, expression: ast.Literal
     ) -> typing.Optional[Value]:
