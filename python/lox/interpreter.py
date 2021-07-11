@@ -1,3 +1,4 @@
+import lark
 import typing
 
 from lox import ast
@@ -5,14 +6,16 @@ from lox import ast
 Value = typing.Union[str, float, bool]
 
 
+class LoxRuntimeError(Exception):
+    def __init__(self, token: lark.Token, message: str):
+        self.token = token
+        self.message = message
+
+
 class Interpreter:
     def interpret(self, expression: ast._Expression):
-        try:
-            value = self._evaluate(expression)
-            return self._stringify(value)
-        except:
-            # TODO: handle runtime errors
-            pass
+        value = self._evaluate(expression)
+        return self._stringify(value)
 
     # TODO: fix casing for visit* methods
     def visit_literal_expression(
@@ -33,8 +36,8 @@ class Interpreter:
         if expression.operator.value == "!":
             return not self._is_truthy(right)
         elif expression.operator.value == "-":
-            # TODO: remove cast
-            return -typing.cast(float, right)
+            right = self._check_number_operand(expression.operator, right)
+            return -right
 
         # Unreachable.
         return None
@@ -48,26 +51,53 @@ class Interpreter:
         op = expression.operator.value
 
         if op == ">":
+            left, right = self._check_number_operands(
+                expression.operator, left, right
+            )
             return left > right
         elif op == ">=":
+            left, right = self._check_number_operands(
+                expression.operator, left, right
+            )
             return left >= right
         elif op == "<":
+            left, right = self._check_number_operands(
+                expression.operator, left, right
+            )
             return left < right
         elif op == "<=":
+            left, right = self._check_number_operands(
+                expression.operator, left, right
+            )
             return left <= right
         elif op == "-":
+            left, right = self._check_number_operands(
+                expression.operator, left, right
+            )
             return left - right
         elif op == "/":
+            left, right = self._check_number_operands(
+                expression.operator, left, right
+            )
             return left / right
         elif op == "*":
+            left, right = self._check_number_operands(
+                expression.operator, left, right
+            )
             return left * right
         elif op == "==":
             return left == right
         elif op == "+":
             if isinstance(left, float) and isinstance(right, float):
                 return left + right
-            elif isinstance(left, str) and isinstance(right, str):
+
+            if isinstance(left, str) and isinstance(right, str):
                 return left + right
+
+            raise LoxRuntimeError(
+                expression.operator,
+                "Operands must be two numbers or two strings.",
+            )
 
         # Unreachable.
         return None
@@ -103,3 +133,22 @@ class Interpreter:
                 return text
 
         return value
+
+    def _check_number_operand(
+        self, operator: lark.Token, operand: typing.Optional[Value]
+    ) -> float:
+        if isinstance(operand, float):
+            return operand
+
+        raise LoxRuntimeError(operator, "Operand must be a number.")
+
+    def _check_number_operands(
+        self,
+        operator: lark.Token,
+        left: typing.Optional[Value],
+        right: typing.Optional[Value],
+    ) -> tuple[float, float]:
+        if isinstance(left, float) and isinstance(right, float):
+            return left, right
+
+        raise LoxRuntimeError(operator, "Operands must be numbers.")

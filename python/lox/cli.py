@@ -1,6 +1,8 @@
 import argparse
+import sys
 
-from lox import parser
+import lox.interpreter
+import lox.parser
 
 
 def main() -> None:
@@ -22,7 +24,10 @@ def main() -> None:
 
 def _run_file(path: str) -> None:
     with open(path, "r") as reader:
-        _run(reader.read())
+        had_runtime_error = _run(reader.read())
+
+        if had_runtime_error:
+            sys.exit(70)
 
 
 def _run_prompt() -> None:
@@ -35,8 +40,22 @@ def _run_prompt() -> None:
         _run(line)
 
 
-def _run(code: str) -> None:
-    print(parser.parse(code))
+def _run(code: str) -> bool:
+    had_runtime_error = False
+    interpreter = lox.interpreter.Interpreter()
+
+    # TODO: handle syntax errors
+    ast = lox.parser.parse(code)
+
+    try:
+        result = interpreter.interpret(ast)
+        print(result)
+    except lox.interpreter.LoxRuntimeError as error:
+        print(error.message, file=sys.stderr)
+        print(f"[line {error.token.line}]", file=sys.stderr)
+        had_runtime_error = True
+
+    return had_runtime_error
 
 
 if __name__ == "__main__":
