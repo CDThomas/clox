@@ -1,7 +1,12 @@
 import dataclasses
+import typing
+
+import lark
 from lark import ast_utils
 
 # TODO: type hints for this module
+
+Value = typing.Union[str, float, bool]
 
 
 class _Ast(ast_utils.Ast):
@@ -13,35 +18,35 @@ class _Ast(ast_utils.Ast):
 class _Expression(_Ast):
     # This will be skipped by create_transformer() because it starts with an
     # underscore.
-    pass
+    def accept(self, visitor):
+        pass
 
 
 @dataclasses.dataclass
 class Literal(_Expression):
-    # TODO: better type for value
-    value: object
+    value: typing.Optional[Value]
 
     def accept(self, visitor):
-        return visitor.visitLiteralExpression(self)
+        return visitor.visit_literal_expression(self)
 
 
 @dataclasses.dataclass
 class Unary(_Expression):
-    operator: str
+    operator: lark.Token
     right: _Expression
 
     def accept(self, visitor):
-        return visitor.visitUnaryExperssion(self)
+        return visitor.visit_unary_expression(self)
 
 
 @dataclasses.dataclass
 class Binary(_Expression):
     left: _Expression
-    operator: str
+    operator: lark.Token
     right: _Expression
 
     def accept(self, visitor):
-        return visitor.visitBinaryExperssion(self)
+        return visitor.visit_binary_expression(self)
 
 
 @dataclasses.dataclass
@@ -49,4 +54,4 @@ class Grouping(_Expression):
     expression: _Expression
 
     def accept(self, visitor):
-        return visitor.visitGroupingExperssion(self)
+        return visitor.visit_grouping_expression(self)

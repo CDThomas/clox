@@ -32,6 +32,8 @@ const_true: "true"
 const_false: "false"
 const_nil: "nil"
 
+// TODO: can prob remove these if I don't actually use the token types (and
+// only end up using the values instead).
 // These are here to give token types from Lark proper names (instead of
 // names like __ANON_0).
 BANG_EQUAL: "!="
