@@ -8,6 +8,10 @@ import lox.ast
 class ToAst(lark.Transformer):
     # Define extra transformation functions, for rules that don't correspond
     # to an AST class.
+    def program(
+        self, statements: list[lox.ast._Statement]
+    ) -> list[lox.ast._Statement]:
+        return statements
 
     def STRING(self, s: str) -> str:
         # Remove quotation marks
@@ -27,9 +31,7 @@ class ToAst(lark.Transformer):
 
 
 # Assumes python/ is cwd
-parser = lark.Lark.open(
-    "./lox/grammar.lark", parser="lalr", start="expression"
-)
+parser = lark.Lark.open("./lox/grammar.lark", parser="lalr", start="program")
 
 transformer = ast_utils.create_transformer(lox.ast, ToAst())
 

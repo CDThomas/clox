@@ -48,8 +48,7 @@ def _run(code: str) -> bool:
     ast = lox.parser.parse(code)
 
     try:
-        result = interpreter.interpret(ast)
-        print(result)
+        interpreter.interpret(ast)
     except lox.interpreter.LoxRuntimeError as error:
         print(error.message, file=sys.stderr)
         print(f"[line {error.token.line}]", file=sys.stderr)
