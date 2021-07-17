@@ -10,5 +10,7 @@
 			"path": "tooling"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"python.formatting.blackArgs": ["--line-length", "79"]
+	}
 }
