@@ -1,3 +1,12 @@
+program: statement*
+
+?statement: expression_statement
+          | print_statement
+
+expression_statement: expression ";"
+
+print_statement: "print" expression ";"
+
 ?expression: equality
 
 ?equality: comparison

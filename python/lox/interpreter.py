@@ -13,9 +13,22 @@ class LoxRuntimeError(Exception):
 
 
 class Interpreter:
-    def interpret(self, expression: ast._Expression):
-        value = self._evaluate(expression)
-        return self._stringify(value)
+    def interpret(self, statements: list[ast._Statement]) -> None:
+        for statement in statements:
+            self._execute(statement)
+
+        return None
+
+    def visit_expression_statement(
+        self, statement: ast.ExpressionStatement
+    ) -> None:
+        self._evaluate(statement.expression)
+        return None
+
+    def visit_print_statement(self, statement: ast.PrintStatement) -> None:
+        value = self._evaluate(statement.expression)
+        print(self._stringify(value))
+        return None
 
     def visit_literal_expression(
         self, expression: ast.Literal
@@ -100,6 +113,9 @@ class Interpreter:
 
         # Unreachable.
         return None
+
+    def _execute(self, statement: ast._Statement) -> None:
+        return statement.accept(self)
 
     def _evaluate(self, expression: ast._Expression) -> typing.Optional[Value]:
         return expression.accept(self)

@@ -22,6 +22,27 @@ class _Expression(_Ast):
         pass
 
 
+class _Statement(_Ast):
+    def accept(self, visitor):
+        pass
+
+
+@dataclasses.dataclass
+class ExpressionStatement(_Statement):
+    expression: _Expression
+
+    def accept(self, visitor):
+        return visitor.visit_expression_statement(self)
+
+
+@dataclasses.dataclass
+class PrintStatement(_Statement):
+    expression: _Expression
+
+    def accept(self, visitor):
+        return visitor.visit_print_statement(self)
+
+
 @dataclasses.dataclass
 class Literal(_Expression):
     value: typing.Optional[Value]
