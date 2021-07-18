@@ -52,10 +52,13 @@ LESS: "<"
 GREATER_EQUAL: ">="
 LESS_EQUAL: "<="
 
-
 // TODO: write own terminals based on Lox grammar instead
 %import common.NUMBER
 %import common.ESCAPED_STRING -> STRING
 
 %import common.WS
 %ignore WS
+
+COMMENT: /\s*/ "//" /[^\n]/*
+
+%ignore COMMENT
