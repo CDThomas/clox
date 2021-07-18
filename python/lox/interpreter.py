@@ -98,7 +98,9 @@ class Interpreter:
             )
             return left * right
         elif op == "==":
-            return left == right
+            return self._is_equal(left, right)
+        elif op == "!=":
+            return not self._is_equal(left, right)
         elif op == "+":
             if isinstance(left, float) and isinstance(right, float):
                 return left + right
@@ -128,6 +130,9 @@ class Interpreter:
             return value
 
         return True
+
+    def _is_equal(self, a: typing.Optional[Value], b: typing.Optional[Value]):
+        return a == b and type(a) == type(b)
 
     def _stringify(self, value: typing.Optional[Value]) -> str:
         if value is None:
