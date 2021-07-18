@@ -10,6 +10,7 @@ def main() -> None:
     )
     parser.add_argument(
         "test_pattern",
+        nargs="+",
         help="pattern for test(s) to run (supports glob syntax)",
     )
     args = parser.parse_args()
