@@ -24,7 +24,8 @@ test_clox: clox
 	poetry run test ./clox $(TEST_PATTERN)
 
 test_pylox:
-	poetry run test ./pylox test/number/literals.lox
+	poetry run test ./pylox "test/bool/*" "test/comments/*" "test/operator/*" "test/nil/*" \
+	  "test/number/literals.lox" test/empty_file.lox test/precedence.lox
 
 # Run tests for tooling.
 test_tooling:

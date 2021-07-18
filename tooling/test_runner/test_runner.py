@@ -19,11 +19,13 @@ class Summary(typing.NamedTuple):
     total_count: int
 
 
-def run_tests(interpreter_path: str, test_pattern: str) -> None:
-    tests = [
-        _run_test(test_path, interpreter_path)
-        for test_path in glob.iglob(test_pattern, recursive=True)
-    ]
+def run_tests(interpreter_path: str, test_patterns: str) -> None:
+    tests: list[Test] = []
+    for test_pattern in test_patterns:
+        for test_path in glob.iglob(test_pattern, recursive=True):
+            test = _run_test(test_path, interpreter_path)
+            tests.append(test)
+
     summary = _summarize(tests)
 
     _print_results(tests, summary)
