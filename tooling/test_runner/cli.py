@@ -1,6 +1,6 @@
 import argparse
 
-from test_runner import test_runner
+from tooling.test_runner import test_runner
 
 
 def main() -> None:

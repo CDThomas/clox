@@ -19,9 +19,12 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 # Run tests for clox.
-TEST_PATTERN?="../test/**/*.lox"
+TEST_PATTERN?="test/**/*.lox"
 test_clox: clox
-	cd tooling && poetry run test ../clox $(TEST_PATTERN)
+	poetry run test ./clox $(TEST_PATTERN)
+
+test_pylox:
+	poetry run test ./pylox test/number/literals.lox
 
 # Run tests for tooling.
 test_tooling:
