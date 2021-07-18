@@ -1,24 +1,26 @@
 [tool.poetry]
-name = "tooling"
+name = "lox"
 version = "0.1.0"
 description = ""
 authors = ["Drew Thomas <cdthomas.92@gmail.com>"]
 license = "MIT"
 packages = [
-    { include = "test_runner" }
+    {include = "lox", from = "python"},
+    {include = "test_runner", from = "tooling"}
 ]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+lark-parser = "^0.11.3"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.4"
 flake8 = "^3.9.2"
 mypy = "^0.910"
 black = "^21.6b0"
 
 [tool.poetry.scripts]
-test = "test_runner.cli:main"
+lox = "lox.cli:main"
+test = "tooling.test_runner.cli:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

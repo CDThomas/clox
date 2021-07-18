@@ -1,6 +1,6 @@
 import pathlib
 
-from test_runner import expectations
+from tooling.test_runner import expectations
 
 
 def test_empty_input(tmp_path: pathlib.Path):

@@ -3,11 +3,5 @@ set -euo pipefail
 
 project_root=$(dirname "$0")
 
-if [[ $# -eq 1 ]]; then
-    abs_input_file_path="$(cd "$(dirname "$1")"; pwd -P)/$(basename "$1")"
-    cd ${project_root}/python
-    poetry run lox $abs_input_file_path
-else
-    cd ${project_root}/python
-    poetry run lox $@
-fi
+cd ${project_root}
+poetry run lox $@

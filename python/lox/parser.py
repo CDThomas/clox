@@ -30,8 +30,10 @@ class ToAst(lark.Transformer):
         return None
 
 
-# Assumes python/ is cwd
-parser = lark.Lark.open("./lox/grammar.lark", parser="lalr", start="program")
+# Assumes project root is cwd
+parser = lark.Lark.open(
+    "./python/lox/grammar.lark", parser="lalr", start="program"
+)
 
 transformer = ast_utils.create_transformer(lox.ast, ToAst())
 
