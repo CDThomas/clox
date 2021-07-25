@@ -1,8 +1,17 @@
 import argparse
+import enum
 import sys
+
+import lark
 
 import lox.interpreter
 import lox.parser
+
+
+class InterpreterResult(enum.Enum):
+    OK = enum.auto()
+    SYNTAX_ERROR = enum.auto()
+    RUNTIME_ERROR = enum.auto()
 
 
 def main() -> None:
@@ -24,9 +33,12 @@ def main() -> None:
 
 def _run_file(path: str) -> None:
     with open(path, "r") as reader:
-        had_runtime_error = _run(reader.read())
+        result = _run(reader.read())
 
-        if had_runtime_error:
+        if result == InterpreterResult.SYNTAX_ERROR:
+            sys.exit(65)
+
+        if result == InterpreterResult.RUNTIME_ERROR:
             sys.exit(70)
 
 
@@ -40,21 +52,24 @@ def _run_prompt() -> None:
         _run(line)
 
 
-def _run(code: str) -> bool:
-    had_runtime_error = False
+def _run(code: str) -> InterpreterResult:
     interpreter = lox.interpreter.Interpreter()
 
-    # TODO: handle syntax errors
-    ast = lox.parser.parse(code)
+    try:
+        ast = lox.parser.parse(code)
+    except lark.UnexpectedInput as u:
+        print("Syntax error:\n")
+        print(u)
+        return InterpreterResult.SYNTAX_ERROR
 
     try:
         interpreter.interpret(ast)
     except lox.interpreter.LoxRuntimeError as error:
         print(error.message, file=sys.stderr)
         print(f"[line {error.token.line}]", file=sys.stderr)
-        had_runtime_error = True
+        return InterpreterResult.RUNTIME_ERROR
 
-    return had_runtime_error
+    return InterpreterResult.OK
 
 
 if __name__ == "__main__":
