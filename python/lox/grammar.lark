@@ -1,4 +1,9 @@
-program: statement*
+program: declaration*
+
+?declaration: variable_declaration
+            | statement
+
+variable_declaration: "var" IDENTIFIER ( "=" expression )? ";"
 
 ?statement: expression_statement
           | print_statement
@@ -30,6 +35,9 @@ print_statement: "print" expression ";"
         | const_false -> literal
         | const_nil -> literal
         | "(" expression ")" -> grouping
+        | variable
+
+variable: IDENTIFIER
 
 !_equality_operator: BANG_EQUAL | EQUAL_EQUAL
 !_comparison_operator: GREATER | GREATER_EQUAL | LESS | LESS_EQUAL
@@ -55,6 +63,7 @@ LESS_EQUAL: "<="
 // TODO: write own terminals based on Lox grammar instead
 %import common.NUMBER
 %import common.ESCAPED_STRING -> STRING
+%import common.CNAME -> IDENTIFIER
 
 %import common.WS
 %ignore WS

@@ -20,6 +20,9 @@ class ToAst(lark.Transformer):
     def NUMBER(self, n: str) -> float:
         return float(n)
 
+    def IDENTIFIER(self, identifier: str) -> str:
+        return identifier
+
     def const_true(self, _: str) -> typing.Literal[True]:
         return True
 
