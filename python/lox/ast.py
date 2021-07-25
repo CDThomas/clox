@@ -9,15 +9,12 @@ from lark import ast_utils
 Value = typing.Union[str, float, bool]
 
 
+# Classes that start with an underscore will be skipped by create_transformer.
 class _Ast(ast_utils.Ast):
-    # This will be skipped by create_transformer() because it starts with an
-    # underscore.
     pass
 
 
 class _Expression(_Ast):
-    # This will be skipped by create_transformer() because it starts with an
-    # underscore.
     def accept(self, visitor):
         pass
 
@@ -25,6 +22,12 @@ class _Expression(_Ast):
 class _Statement(_Ast):
     def accept(self, visitor):
         pass
+
+
+@dataclasses.dataclass
+class VariableDeclaration(_Statement):
+    name: lark.Token
+    initializer: typing.Optional[_Expression] = None
 
 
 @dataclasses.dataclass
@@ -76,3 +79,8 @@ class Grouping(_Expression):
 
     def accept(self, visitor):
         return visitor.visit_grouping_expression(self)
+
+
+@dataclasses.dataclass
+class Variable(_Expression):
+    name: lark.Token
