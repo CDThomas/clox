@@ -2,14 +2,10 @@ import lark
 import typing
 
 from lox import ast
+from lox import errors
+from lox import types
 
-Value = typing.Union[str, float, bool]
-
-
-class LoxRuntimeError(Exception):
-    def __init__(self, token: lark.Token, message: str):
-        self.token = token
-        self.message = message
+# Pick up at 8.3.1: interpreting global variables
 
 
 class Interpreter:
@@ -32,17 +28,17 @@ class Interpreter:
 
     def visit_literal_expression(
         self, expression: ast.Literal
-    ) -> typing.Optional[Value]:
+    ) -> typing.Optional[types.Value]:
         return expression.value
 
     def visit_grouping_expression(
         self, expression: ast.Grouping
-    ) -> typing.Optional[Value]:
+    ) -> typing.Optional[types.Value]:
         return self._evaluate(expression.expression)
 
     def visit_unary_expression(
         self, expression: ast.Unary
-    ) -> typing.Optional[Value]:
+    ) -> typing.Optional[types.Value]:
         right = self._evaluate(expression.right)
 
         if expression.operator.value == "!":
@@ -56,7 +52,7 @@ class Interpreter:
 
     def visit_binary_expression(
         self, expression: ast.Binary
-    ) -> typing.Optional[Value]:
+    ) -> typing.Optional[types.Value]:
         left = self._evaluate(expression.left)
         right = self._evaluate(expression.right)
 
@@ -108,7 +104,7 @@ class Interpreter:
             if isinstance(left, str) and isinstance(right, str):
                 return left + right
 
-            raise LoxRuntimeError(
+            raise errors.LoxRuntimeError(
                 expression.operator,
                 "Operands must be two numbers or two strings.",
             )
@@ -119,10 +115,12 @@ class Interpreter:
     def _execute(self, statement: ast._Statement) -> None:
         return statement.accept(self)
 
-    def _evaluate(self, expression: ast._Expression) -> typing.Optional[Value]:
+    def _evaluate(
+        self, expression: ast._Expression
+    ) -> typing.Optional[types.Value]:
         return expression.accept(self)
 
-    def _is_truthy(self, value: typing.Optional[Value]) -> bool:
+    def _is_truthy(self, value: typing.Optional[types.Value]) -> bool:
         if value is None:
             return False
 
@@ -131,10 +129,12 @@ class Interpreter:
 
         return True
 
-    def _is_equal(self, a: typing.Optional[Value], b: typing.Optional[Value]):
+    def _is_equal(
+        self, a: typing.Optional[types.Value], b: typing.Optional[types.Value]
+    ):
         return a == b and type(a) == type(b)
 
-    def _stringify(self, value: typing.Optional[Value]) -> str:
+    def _stringify(self, value: typing.Optional[types.Value]) -> str:
         if value is None:
             return "nil"
 
@@ -155,20 +155,20 @@ class Interpreter:
         return value
 
     def _check_number_operand(
-        self, operator: lark.Token, operand: typing.Optional[Value]
+        self, operator: lark.Token, operand: typing.Optional[types.Value]
     ) -> float:
         if isinstance(operand, float):
             return operand
 
-        raise LoxRuntimeError(operator, "Operand must be a number.")
+        raise errors.LoxRuntimeError(operator, "Operand must be a number.")
 
     def _check_number_operands(
         self,
         operator: lark.Token,
-        left: typing.Optional[Value],
-        right: typing.Optional[Value],
+        left: typing.Optional[types.Value],
+        right: typing.Optional[types.Value],
     ) -> tuple[float, float]:
         if isinstance(left, float) and isinstance(right, float):
             return left, right
 
-        raise LoxRuntimeError(operator, "Operands must be numbers.")
+        raise errors.LoxRuntimeError(operator, "Operands must be numbers.")

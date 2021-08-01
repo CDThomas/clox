@@ -4,6 +4,7 @@ import sys
 
 import lark
 
+import lox.errors
 import lox.interpreter
 import lox.parser
 
@@ -64,7 +65,7 @@ def _run(code: str) -> InterpreterResult:
 
     try:
         interpreter.interpret(ast)
-    except lox.interpreter.LoxRuntimeError as error:
+    except lox.errors.LoxRuntimeError as error:
         print(error.message, file=sys.stderr)
         print(f"[line {error.token.line}]", file=sys.stderr)
         return InterpreterResult.RUNTIME_ERROR
