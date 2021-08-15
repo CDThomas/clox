@@ -90,3 +90,12 @@ class Variable(_Expression):
 
     def accept(self, visitor):
         return visitor.visit_variable_expression(self)
+
+
+@dataclasses.dataclass
+class Assignment(_Expression):
+    name: lark.Token
+    value: _Expression
+
+    def accept(self, visitor):
+        return visitor.visit_assignment_expression(self)
