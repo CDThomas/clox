@@ -34,7 +34,8 @@ def main() -> None:
 
 def _run_file(path: str) -> None:
     with open(path, "r") as reader:
-        result = _run(reader.read())
+        interpreter = lox.interpreter.Interpreter()
+        result = _run(interpreter, reader.read())
 
         if result == InterpreterResult.SYNTAX_ERROR:
             sys.exit(65)
@@ -44,17 +45,20 @@ def _run_file(path: str) -> None:
 
 
 def _run_prompt() -> None:
+    interpreter = lox.interpreter.Interpreter()
+
     while True:
         line = input("> ")
 
         if line == "":
             break
 
-        _run(line)
+        _run(interpreter, line)
 
 
-def _run(code: str) -> InterpreterResult:
-    interpreter = lox.interpreter.Interpreter()
+def _run(
+    interpreter: lox.interpreter.Interpreter, code: str
+) -> InterpreterResult:
 
     try:
         ast = lox.parser.parse(code)
