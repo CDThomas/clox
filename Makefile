@@ -25,7 +25,11 @@ test_clox: clox
 
 test_pylox:
 	poetry run test ./pylox "test/bool/*" "test/comments/*" "test/operator/*" "test/nil/*" \
-	  "test/number/literals.lox" test/empty_file.lox test/precedence.lox
+	  test/number/literals.lox test/empty_file.lox test/precedence.lox \
+	  test/assignment/associativity.lox test/assignment/global.lox test/assignment/syntax.lox test/assignment/undefined.lox \
+	  test/variable/redeclare_global.lox test/variable/redefine_global.lox /Users/drewthomas/Dev/lox/test/variable/undefined_global.lox \
+	  test/variable/uninitialized.lox test/variable/use_global_in_initializer.lox
+
 
 # Run tests for tooling.
 test_tooling:

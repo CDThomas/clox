@@ -42,6 +42,13 @@ class Interpreter:
 
         return None
 
+    def visit_assignment_expression(
+        self, expression: ast.Assignment
+    ) -> typing.Optional[types.Value]:
+        value = self._evaluate(expression.value)
+        self.environment.assign(expression.name, value)
+        return value
+
     def visit_literal_expression(
         self, expression: ast.Literal
     ) -> typing.Optional[types.Value]:

@@ -12,7 +12,10 @@ expression_statement: expression ";"
 
 print_statement: "print" expression ";"
 
-?expression: equality
+?expression: assignment
+
+?assignment: equality
+           | IDENTIFIER "=" assignment -> assignment
 
 ?equality: comparison
          | equality _equality_operator comparison -> binary
