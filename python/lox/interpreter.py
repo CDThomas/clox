@@ -2,6 +2,7 @@ import lark
 import typing
 
 from lox import ast
+from lox import environment
 from lox import errors
 from lox import types
 
@@ -9,6 +10,9 @@ from lox import types
 
 
 class Interpreter:
+    def __init__(self) -> None:
+        self.environment = environment.Environment()
+
     def interpret(self, statements: list[ast._Statement]) -> None:
         for statement in statements:
             self._execute(statement)
@@ -24,6 +28,18 @@ class Interpreter:
     def visit_print_statement(self, statement: ast.PrintStatement) -> None:
         value = self._evaluate(statement.expression)
         print(self._stringify(value))
+        return None
+
+    def visit_variable_declaration(
+        self, statement: ast.VariableDeclaration
+    ) -> None:
+        value = None
+
+        if statement.initializer:
+            value = self._evaluate(statement.initializer)
+
+        self.environment.define(statement.name.value, value)
+
         return None
 
     def visit_literal_expression(
@@ -49,6 +65,11 @@ class Interpreter:
 
         # Unreachable.
         return None
+
+    def visit_variable_expression(
+        self, expression: ast.Variable
+    ) -> typing.Optional[types.Value]:
+        return self.environment.get(expression.name)
 
     def visit_binary_expression(
         self, expression: ast.Binary

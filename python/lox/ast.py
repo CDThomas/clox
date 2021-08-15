@@ -29,6 +29,9 @@ class VariableDeclaration(_Statement):
     name: lark.Token
     initializer: typing.Optional[_Expression] = None
 
+    def accept(self, visitor):
+        return visitor.visit_variable_declaration(self)
+
 
 @dataclasses.dataclass
 class ExpressionStatement(_Statement):
@@ -84,3 +87,6 @@ class Grouping(_Expression):
 @dataclasses.dataclass
 class Variable(_Expression):
     name: lark.Token
+
+    def accept(self, visitor):
+        return visitor.visit_variable_expression(self)
