@@ -26,8 +26,11 @@ test_clox: clox
 test_pylox:
 	poetry run test ./pylox "test/bool/*" "test/comments/*" "test/operator/*" "test/nil/*" \
 	  test/number/literals.lox test/empty_file.lox test/precedence.lox \
-	  test/assignment/associativity.lox test/assignment/global.lox test/assignment/syntax.lox test/assignment/undefined.lox \
-	  test/variable/redeclare_global.lox test/variable/redefine_global.lox /Users/drewthomas/Dev/lox/test/variable/undefined_global.lox \
+	  test/assignment/associativity.lox test/assignment/global.lox test/assignment/local.lox test/assignment/syntax.lox test/assignment/undefined.lox \
+	  test/variable/in_middle_of_block.lox test/variable/in_nested_block.lox \
+	  test/variable/scope_reuse_in_different_blocks.lox test/variable/shadow_and_local.lox test/variable/shadow_global.lox \
+	  test/variable/shadow_local.lox test/variable/undefined_local.lox \
+	  test/variable/redeclare_global.lox test/variable/redefine_global.lox test/variable/undefined_global.lox \
 	  test/variable/uninitialized.lox test/variable/use_global_in_initializer.lox
 
 

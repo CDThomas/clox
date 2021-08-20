@@ -140,8 +140,31 @@ class Interpreter:
         # Unreachable.
         return None
 
+    def visit_block_statement(self, statement: ast.Block) -> None:
+        self._execute_block(
+            statement.statements, environment.Environment(self.environment)
+        )
+
     def _execute(self, statement: ast._Statement) -> None:
         return statement.accept(self)
+
+    def _execute_block(
+        self,
+        statements: typing.Optional[list[ast._Statement]],
+        environment: environment.Environment,
+    ) -> None:
+        if not statements:
+            return
+
+        prevous = self.environment
+
+        try:
+            self.environment = environment
+
+            for statement in statements:
+                self._execute(statement)
+        finally:
+            self.environment = prevous
 
     def _evaluate(
         self, expression: ast._Expression

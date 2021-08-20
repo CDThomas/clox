@@ -50,6 +50,14 @@ class PrintStatement(_Statement):
 
 
 @dataclasses.dataclass
+class Block(_Statement, ast_utils.AsList):
+    statements: typing.Optional[list[_Statement]] = None
+
+    def accept(self, visitor):
+        return visitor.visit_block_statement(self)
+
+
+@dataclasses.dataclass
 class Literal(_Expression):
     value: typing.Optional[Value]
 
