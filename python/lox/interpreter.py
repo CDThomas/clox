@@ -60,6 +60,20 @@ class Interpreter:
     ) -> typing.Optional[types.Value]:
         return expression.value
 
+    def visit_logical_expression(
+        self, expression: ast.LogicalExpression
+    ) -> typing.Optional[types.Value]:
+        left = self._evaluate(expression.left)
+
+        if expression.operator.value == "or":
+            if self._is_truthy(left):
+                return left
+        else:
+            if not self._is_truthy(left):
+                return left
+
+        return self._evaluate(expression.right)
+
     def visit_grouping_expression(
         self, expression: ast.Grouping
     ) -> typing.Optional[types.Value]:

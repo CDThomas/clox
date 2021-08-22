@@ -117,3 +117,13 @@ class Assignment(_Expression):
 
     def accept(self, visitor):
         return visitor.visit_assignment_expression(self)
+
+
+@dataclasses.dataclass
+class LogicalExpression(_Expression):
+    left: _Expression
+    operator: lark.Token
+    right: _Expression
+
+    def accept(self, visitor):
+        return visitor.visit_logical_expression(self)
