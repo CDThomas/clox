@@ -50,6 +50,15 @@ class PrintStatement(_Statement):
 
 
 @dataclasses.dataclass
+class WhileStatement(_Statement):
+    condition: _Expression
+    body: _Statement
+
+    def accept(self, visitor):
+        return visitor.visit_while_statement(self)
+
+
+@dataclasses.dataclass
 class Block(_Statement, ast_utils.AsList):
     statements: typing.Optional[list[_Statement]] = None
 
