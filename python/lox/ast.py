@@ -58,6 +58,16 @@ class Block(_Statement, ast_utils.AsList):
 
 
 @dataclasses.dataclass
+class IfStatement(_Statement):
+    condition: _Expression
+    then_branch: _Statement
+    else_branch: typing.Optional[_Statement] = None
+
+    def accept(self, visitor):
+        return visitor.visit_if_statement(self)
+
+
+@dataclasses.dataclass
 class Literal(_Expression):
     value: typing.Optional[Value]
 

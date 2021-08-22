@@ -25,6 +25,12 @@ class Interpreter:
         self._evaluate(statement.expression)
         return None
 
+    def visit_if_statement(self, statement: ast.IfStatement) -> None:
+        if self._is_truthy(self._evaluate(statement.condition)):
+            self._execute(statement.then_branch)
+        elif statement.else_branch:
+            self._execute(statement.else_branch)
+
     def visit_print_statement(self, statement: ast.PrintStatement) -> None:
         value = self._evaluate(statement.expression)
         print(self._stringify(value))
