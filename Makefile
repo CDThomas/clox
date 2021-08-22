@@ -19,26 +19,57 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 # Run tests for clox.
-TEST_PATTERN?="test/**/*.lox"
 test_clox: clox
-	poetry run test ./clox $(TEST_PATTERN)
+	@poetry run test ./clox \
+	"test/assignment/*" \
+	"test/bool/*" \
+	"test/block/*" \
+	"test/comments/*" \
+	"test/nil/*" \
+	"test/number/*" \
+	"test/operator/*" \
+	"test/print/*" \
+	"test/string/*" \
+	"test/variable/*" \
+	test/empty_file.lox \
+	test/precedence.lox
 
 test_pylox:
-	poetry run test ./pylox "test/bool/*" "test/comments/*" "test/operator/*" "test/nil/*" \
-	  test/number/literals.lox test/empty_file.lox test/precedence.lox \
-	  test/assignment/associativity.lox test/assignment/global.lox test/assignment/local.lox test/assignment/syntax.lox test/assignment/undefined.lox \
-	  test/variable/in_middle_of_block.lox test/variable/in_nested_block.lox \
-	  test/variable/scope_reuse_in_different_blocks.lox test/variable/shadow_and_local.lox test/variable/shadow_global.lox \
-	  test/variable/shadow_local.lox test/variable/undefined_local.lox \
-	  test/variable/redeclare_global.lox test/variable/redefine_global.lox test/variable/undefined_global.lox \
-	  test/variable/uninitialized.lox test/variable/use_global_in_initializer.lox
+	@poetry run test ./pylox \
+	test/assignment/associativity.lox \
+	test/assignment/global.lox \
+	test/assignment/local.lox \
+	test/assignment/syntax.lox \
+	test/assignment/undefined.lox \
+	"test/bool/*" \
+	"test/block/*" \
+	"test/comments/*" \
+	"test/if/*" \
+	"test/logical_operator/*" \
+	"test/nil/*" \
+	test/number/literals.lox \
+	"test/operator/*" \
+	test/variable/in_middle_of_block.lox \
+	test/variable/in_nested_block.lox \
+	test/variable/scope_reuse_in_different_blocks.lox \
+	test/variable/shadow_and_local.lox \
+	test/variable/shadow_global.lox \
+	test/variable/shadow_local.lox \
+	test/variable/undefined_local.lox \
+	test/variable/redeclare_global.lox \
+	test/variable/redefine_global.lox \
+	test/variable/undefined_global.lox \
+	test/variable/uninitialized.lox \
+	test/variable/use_global_in_initializer.lox \
+	test/empty_file.lox \
+	test/precedence.lox
 
 
 # Run tests for tooling.
 test_tooling:
 	cd tooling && poetry run pytest test
 
-# Run all tests for clox and tooling.
-test: test_clox test_tooling
+# Run all tests for clox, pylox, and tooling.
+test: test_clox test_pylox test_tooling
 
 .PHONY: clean clox debug test
