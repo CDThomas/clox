@@ -6,8 +6,6 @@ from lox import environment
 from lox import errors
 from lox import types
 
-# Pick up at 8.3.1: interpreting global variables
-
 
 class Interpreter:
     def __init__(self) -> None:
@@ -45,6 +43,12 @@ class Interpreter:
             value = self._evaluate(statement.initializer)
 
         self.environment.define(statement.name.value, value)
+
+        return None
+
+    def visit_while_statement(self, statement: ast.WhileStatement) -> None:
+        while self._is_truthy(self._evaluate(statement.condition)):
+            self._execute(statement.body)
 
         return None
 
