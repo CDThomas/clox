@@ -20,8 +20,14 @@ print_statement: "print" expression ";"
 
 ?expression: assignment
 
-?assignment: equality
+?assignment: logic_or
            | IDENTIFIER "=" assignment -> assignment
+
+?logic_or: logic_and
+         | logic_or _logic_or_operator logic_and -> logical_expression
+
+?logic_and: equality
+          | logic_and _logic_and_operator equality -> logical_expression
 
 ?equality: comparison
          | equality _equality_operator comparison -> binary
@@ -36,7 +42,7 @@ print_statement: "print" expression ";"
        | factor _multipication_operator unary_expr -> binary
 
 ?unary_expr: primary
-      | _unary_operator unary_expr -> unary
+           | _unary_operator unary_expr -> unary
 
 ?primary: NUMBER -> literal
         | STRING -> literal
@@ -48,26 +54,17 @@ print_statement: "print" expression ";"
 
 variable: IDENTIFIER
 
-!_equality_operator: BANG_EQUAL | EQUAL_EQUAL
-!_comparison_operator: GREATER | GREATER_EQUAL | LESS | LESS_EQUAL
+!_equality_operator: "!=" | "=="
+!_comparison_operator: ">" | ">=" | "<" | "<="
 !_addition_operator: "-" | "+"
 !_multipication_operator: "/" | "*"
 !_unary_operator: "!" | "-"
+!_logic_or_operator: "or"
+!_logic_and_operator: "and"
 
 const_true: "true"
 const_false: "false"
 const_nil: "nil"
-
-// TODO: can prob remove these if I don't actually use the token types (and
-// only end up using the values instead).
-// These are here to give token types from Lark proper names (instead of
-// names like __ANON_0).
-BANG_EQUAL: "!="
-EQUAL_EQUAL: "=="
-GREATER: ">"
-LESS: "<"
-GREATER_EQUAL: ">="
-LESS_EQUAL: "<="
 
 // TODO: write own terminals based on Lox grammar instead
 %import common.NUMBER
