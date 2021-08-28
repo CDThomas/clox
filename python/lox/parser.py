@@ -2,15 +2,15 @@ import lark
 from lark import ast_utils
 import typing
 
-import lox.ast
+from lox import ast
 
 
 class ToAst(lark.Transformer):
     # Define extra transformation functions, for rules that don't correspond
     # to an AST class.
     def program(
-        self, statements: list[lox.ast._Statement]
-    ) -> list[lox.ast._Statement]:
+        self, statements: list[ast._Statement]
+    ) -> list[ast._Statement]:
         return statements
 
     def STRING(self, s: str) -> str:
@@ -32,13 +32,40 @@ class ToAst(lark.Transformer):
     def const_nil(self, _: str) -> None:
         return None
 
+    def empty_initializer(self, _: str) -> None:
+        return None
+
+    def for_statement(self, args: list[typing.Optional[ast._Ast]]) -> ast._Ast:
+        [initializer, condition, increment, body] = args
+        assert isinstance(body, ast._Statement)
+
+        if increment:
+            assert isinstance(increment, ast._Expression)
+            body = ast.Block([body, ast.ExpressionStatement(increment)])
+
+        if not condition:
+            condition = ast.Literal(True)
+
+        assert isinstance(condition, ast._Expression)
+
+        body = ast.WhileStatement(condition, body)
+
+        if initializer:
+            assert isinstance(initializer, ast._Statement)
+            body = ast.Block([initializer, body])
+
+        return body
+
 
 # Assumes project root is cwd
 parser = lark.Lark.open(
-    "./python/lox/grammar.lark", parser="lalr", start="program"
+    "./python/lox/grammar.lark",
+    parser="lalr",
+    start="program",
+    maybe_placeholders=True,
 )
 
-transformer = ast_utils.create_transformer(lox.ast, ToAst())
+transformer = ast_utils.create_transformer(ast, ToAst())
 
 
 def parse(text):

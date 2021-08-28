@@ -44,6 +44,7 @@ test_pylox:
 	"test/bool/*" \
 	"test/block/*" \
 	"test/comments/*" \
+	"test/for/*" \
 	"test/if/*" \
 	"test/logical_operator/*" \
 	"test/nil/*" \
