@@ -12,6 +12,7 @@ variable_declaration: "var" IDENTIFIER ( "=" expression )? ";"
           | while_statement
           | block
 
+// Not an AST node. Gets desugared by the parser into an equivalent while statement.
 for_statement: "for" "(" ( variable_declaration | expression_statement | empty_initializer ) [expression] ";" [expression] ")" statement
 
 !empty_initializer: ";"
@@ -49,8 +50,19 @@ print_statement: "print" expression ";"
 ?factor: unary_expr
        | factor _multipication_operator unary_expr -> binary
 
-?unary_expr: primary
+?unary_expr: call
            | _unary_operator unary_expr -> unary
+
+?call: primary
+     | call "(" [arguments] _closing_paren -> call
+
+// Used for returing the closing paren's location when reporting runtime
+// errors caused by function calls.
+!_closing_paren: ")"
+
+// Not an AST node. Used for collecting arguments into a list for
+// ast.Call nodes.
+arguments: expression ( "," expression )*
 
 ?primary: NUMBER -> literal
         | STRING -> literal
@@ -70,6 +82,8 @@ variable: IDENTIFIER
 !_logic_or_operator: "or"
 !_logic_and_operator: "and"
 
+// Not actual AST nodes. Used by the parser to transform bools
+// and nil to their Python values.
 const_true: "true"
 const_false: "false"
 const_nil: "nil"
