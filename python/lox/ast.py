@@ -25,6 +25,34 @@ class _Statement(_Ast):
 
 
 @dataclasses.dataclass
+class FunctionDeclaration(_Statement):
+    name: lark.Token
+    params: list[lark.Token]
+    body: list[_Statement]
+
+    def __init__(
+        self,
+        name: lark.Token,
+        params: typing.Optional[list[lark.Token]],
+        block: typing.Optional["Block"],
+    ) -> None:
+        if params is None:
+            params = []
+
+        if block and block.statements:
+            body = block.statements
+        else:
+            body = []
+
+        self.name = name
+        self.params = params
+        self.body = body
+
+    def accept(self, visitor):
+        return visitor.visit_function_declaration(self)
+
+
+@dataclasses.dataclass
 class VariableDeclaration(_Statement):
     name: lark.Token
     initializer: typing.Optional[_Expression] = None

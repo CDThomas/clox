@@ -59,6 +59,9 @@ class ToAst(lark.Transformer):
     def arguments(self, args: list[ast._Expression]) -> list[ast._Expression]:
         return args
 
+    def parameters(self, params: list[lark.Token]) -> list[lark.Token]:
+        return params
+
 
 # Assumes project root is cwd
 parser = lark.Lark.open(

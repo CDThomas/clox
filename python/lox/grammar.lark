@@ -1,7 +1,16 @@
 program: declaration*
 
-?declaration: variable_declaration
+?declaration: function_declaration
+            | variable_declaration
             | statement
+
+function_declaration: "fun" _function
+
+_function: IDENTIFIER "(" [parameters] ")" block
+
+// Not an AST node. Used for collecting arguments into a list for
+// ast.FunctionDeclaration nodes.
+parameters: IDENTIFIER ( "," IDENTIFIER )*
 
 variable_declaration: "var" IDENTIFIER ( "=" expression )? ";"
 
@@ -56,7 +65,7 @@ print_statement: "print" expression ";"
 ?call: primary
      | call "(" [arguments] _closing_paren -> call
 
-// Used for returing the closing paren's location when reporting runtime
+// Used for returning the closing paren's location when reporting runtime
 // errors caused by function calls.
 !_closing_paren: ")"
 
