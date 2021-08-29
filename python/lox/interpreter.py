@@ -1,51 +1,18 @@
-import abc
 import lark
-import time
 import typing
 
 from lox import ast
 from lox import environment
 from lox import errors
+from lox import globals
+from lox import lox_callable
 from lox import types
-
-
-class LoxCallable(abc.ABC):
-    @abc.abstractmethod
-    def arity(self) -> int:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def call(
-        self,
-        interpreter: "Interpreter",
-        arguments: list[typing.Optional[types.Value]],
-    ) -> typing.Optional[types.Value]:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def to_string(self) -> str:
-        raise NotImplementedError
-
-
-class ClockGlobal(LoxCallable):
-    def arity(self) -> int:
-        return 0
-
-    def call(
-        self,
-        interpreter: "Interpreter",
-        arguments: list[typing.Optional[types.Value]],
-    ) -> typing.Optional[types.Value]:
-        return time.perf_counter()
-
-    def to_string(self) -> str:
-        return "<native fn>"
 
 
 class Interpreter:
     def __init__(self) -> None:
         global_env = environment.Environment()
-        global_env.define("clock", ClockGlobal())
+        global_env.define("clock", globals.ClockGlobal())
 
         self.environment = global_env
 
@@ -213,7 +180,7 @@ class Interpreter:
             for argument in expression.arguments:
                 arguments.append(self._evaluate(argument))
 
-        if not isinstance(callee, LoxCallable):
+        if not isinstance(callee, lox_callable.LoxCallable):
             raise errors.LoxRuntimeError(
                 expression.closing_paren,
                 "Can only call functions and classes.",
