@@ -104,6 +104,16 @@ class Binary(_Expression):
 
 
 @dataclasses.dataclass
+class Call(_Expression):
+    callee: _Expression
+    arguments: typing.Optional[list[_Expression]]
+    closing_paren: lark.Token
+
+    def accept(self, visitor):
+        return visitor.visit_call_expression(self)
+
+
+@dataclasses.dataclass
 class Grouping(_Expression):
     expression: _Expression
 
