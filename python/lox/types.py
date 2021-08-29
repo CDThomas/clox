@@ -1,3 +1,6 @@
 import typing
 
-Value = typing.Union[str, float, bool]
+if typing.TYPE_CHECKING:
+    from lox.interpreter import LoxCallable
+
+Value = typing.Union[str, float, bool, "LoxCallable"]

@@ -1,4 +1,6 @@
+import abc
 import lark
+import time
 import typing
 
 from lox import ast
@@ -7,9 +9,45 @@ from lox import errors
 from lox import types
 
 
+class LoxCallable(abc.ABC):
+    @abc.abstractmethod
+    def arity(self) -> int:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def call(
+        self,
+        interpreter: "Interpreter",
+        arguments: list[typing.Optional[types.Value]],
+    ) -> typing.Optional[types.Value]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def to_string(self) -> str:
+        raise NotImplementedError
+
+
+class ClockGlobal(LoxCallable):
+    def arity(self) -> int:
+        return 0
+
+    def call(
+        self,
+        interpreter: "Interpreter",
+        arguments: list[typing.Optional[types.Value]],
+    ) -> typing.Optional[types.Value]:
+        return time.perf_counter()
+
+    def to_string(self) -> str:
+        return "<native fn>"
+
+
 class Interpreter:
     def __init__(self) -> None:
-        self.environment = environment.Environment()
+        global_env = environment.Environment()
+        global_env.define("clock", ClockGlobal())
+
+        self.environment = global_env
 
     def interpret(self, statements: list[ast._Statement]) -> None:
         for statement in statements:
@@ -164,6 +202,33 @@ class Interpreter:
         # Unreachable.
         return None
 
+    def visit_call_expression(
+        self, expression: ast.Call
+    ) -> typing.Optional[types.Value]:
+        callee = self._evaluate(expression.callee)
+
+        arguments: list[typing.Optional[types.Value]] = []
+
+        if expression.arguments:
+            for argument in expression.arguments:
+                arguments.append(self._evaluate(argument))
+
+        if not isinstance(callee, LoxCallable):
+            raise errors.LoxRuntimeError(
+                expression.closing_paren,
+                "Can only call functions and classes.",
+            )
+
+        if len(arguments) != callee.arity():
+            message = (
+                f"Expected {callee.arity()} arguments"
+                f"but got {len(arguments)}."
+            )
+
+            raise errors.LoxRuntimeError(expression.closing_paren, message)
+
+        return callee.call(self, arguments)
+
     def visit_block_statement(self, statement: ast.Block) -> None:
         self._execute_block(
             statement.statements, environment.Environment(self.environment)
@@ -226,6 +291,9 @@ class Interpreter:
                 return text[:-2]
             else:
                 return text
+
+        if isinstance(value, LoxCallable):
+            return value.to_string()
 
         return value
 
