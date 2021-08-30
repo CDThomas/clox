@@ -4,17 +4,19 @@ import typing
 from lox import ast
 from lox import environment
 from lox import errors
-from lox import globals
 from lox import lox_callable
+from lox import lox_function
+from lox import lox_globals
 from lox import types
 
 
 class Interpreter:
     def __init__(self) -> None:
-        global_env = environment.Environment()
-        global_env.define("clock", globals.ClockGlobal())
+        globals = environment.Environment()
+        globals.define("clock", lox_globals.ClockGlobal())
 
-        self.environment = global_env
+        self.globals = globals
+        self.environment = globals
 
     def interpret(self, statements: list[ast._Statement]) -> None:
         for statement in statements:
@@ -26,6 +28,14 @@ class Interpreter:
         self, statement: ast.ExpressionStatement
     ) -> None:
         self._evaluate(statement.expression)
+        return None
+
+    def visit_function_declaration(
+        self, statement: ast.FunctionDeclaration
+    ) -> None:
+        func = lox_function.LoxFunction(statement)
+        self.environment.define(statement.name.value, func)
+
         return None
 
     def visit_if_statement(self, statement: ast.IfStatement) -> None:
@@ -259,7 +269,7 @@ class Interpreter:
             else:
                 return text
 
-        if isinstance(value, LoxCallable):
+        if isinstance(value, lox_callable.LoxCallable):
             return value.to_string()
 
         return value
