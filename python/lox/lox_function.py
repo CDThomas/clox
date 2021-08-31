@@ -3,6 +3,7 @@ import typing
 from lox import ast
 from lox import environment
 from lox import lox_callable
+from lox import lox_return
 from lox import types
 
 if typing.TYPE_CHECKING:
@@ -26,7 +27,10 @@ class LoxFunction(lox_callable.LoxCallable):
         for index, param in enumerate(self.declaration.params):
             env.define(param.value, arguments[index])
 
-        interpreter._execute_block(self.declaration.body, env)
+        try:
+            interpreter._execute_block(self.declaration.body, env)
+        except lox_return.LoxReturn as return_value:
+            return return_value.value
 
         return None
 

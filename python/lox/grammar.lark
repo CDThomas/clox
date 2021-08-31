@@ -18,6 +18,7 @@ variable_declaration: "var" IDENTIFIER ( "=" expression )? ";"
           | for_statement
           | if_statement
           | print_statement
+          | return_statement
           | while_statement
           | block
 
@@ -35,6 +36,11 @@ block: "{" declaration* "}"
 expression_statement: expression ";"
 
 print_statement: "print" expression ";"
+
+return_statement: _return_keyword [expression] ";"
+
+// Used to keep track of the return statement's location for error reporting.
+!_return_keyword: "return"
 
 ?expression: assignment
 
