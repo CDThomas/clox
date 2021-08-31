@@ -7,6 +7,7 @@ from lox import errors
 from lox import lox_callable
 from lox import lox_function
 from lox import lox_globals
+from lox import lox_return
 from lox import types
 
 
@@ -48,6 +49,13 @@ class Interpreter:
         value = self._evaluate(statement.expression)
         print(self._stringify(value))
         return None
+
+    def visit_return_statement(self, statement: ast.ReturnStatement) -> None:
+        value: typing.Optional[types.Value] = None
+        if statement.value:
+            value = self._evaluate(statement.value)
+
+        raise lox_return.LoxReturn(value)
 
     def visit_variable_declaration(
         self, statement: ast.VariableDeclaration

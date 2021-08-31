@@ -78,6 +78,15 @@ class PrintStatement(_Statement):
 
 
 @dataclasses.dataclass
+class ReturnStatement(_Statement):
+    keyword: lark.Token
+    value: _Expression
+
+    def accept(self, visitor):
+        return visitor.visit_return_statement(self)
+
+
+@dataclasses.dataclass
 class WhileStatement(_Statement):
     condition: _Expression
     body: _Statement
