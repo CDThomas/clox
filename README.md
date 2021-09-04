@@ -11,7 +11,7 @@ This repo also contains a [shared test runner](#test-runner) for testing the two
 
 Pylox is a port of Jlox to Python. The source code is in the [`python`](./python) directory.
 
-The functionality of Pylox is intended to line up one-to-one with Jlox, but there are a couple of key differences in the implementation (apart from being written in Python):
+The functionality of Pylox mostly lines up with Jlox, but there are a couple of key differences in the implementation (apart from being written in Python):
 1. I've used [Lark](https://lark-parser.readthedocs.io/en/latest/index.html) for parsing in place of implementing the lexer and parser described in the book. I chose this approach out of interest in learning more about parser generators.
 1. I've skipped using code to generate the AST classes. This is because the AST implemenation using Python's [Data Classes](https://docs.python.org/3/library/dataclasses.html) isn't much more verbose than the code to generate them would have been.
 

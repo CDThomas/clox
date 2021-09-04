@@ -69,7 +69,6 @@ test_pylox:
 	test/empty_file.lox \
 	test/precedence.lox
 
-
 # Run tests for tooling.
 test_tooling:
 	cd tooling && poetry run pytest test
@@ -77,4 +76,12 @@ test_tooling:
 # Run all tests for clox, pylox, and tooling.
 test: test_clox test_pylox test_tooling
 
-.PHONY: clean clox debug test
+typecheck_pylox:
+	poetry run mypy ./python
+
+typecheck_tooling:
+	poetry run mypy ./tooling
+
+typecheck: typecheck_pylox typecheck_tooling
+
+.PHONY: clean clox debug test typecheck

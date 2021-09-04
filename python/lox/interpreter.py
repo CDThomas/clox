@@ -9,9 +9,13 @@ from lox import lox_function
 from lox import lox_globals
 from lox import lox_return
 from lox import types
+from lox import visitor
 
 
-class Interpreter:
+class Interpreter(
+    visitor.StatementVisitor[None],
+    visitor.ExpressionVisitor[typing.Optional[types.Value]],
+):
     def __init__(self) -> None:
         globals = environment.Environment()
         globals.define("clock", lox_globals.ClockGlobal())
