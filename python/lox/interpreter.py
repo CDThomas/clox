@@ -34,7 +34,7 @@ class Interpreter:
     def visit_function_declaration(
         self, statement: ast.FunctionDeclaration
     ) -> None:
-        func = lox_function.LoxFunction(statement)
+        func = lox_function.LoxFunction(statement, self.environment)
         self.environment.define(statement.name.value, func)
 
         return None
