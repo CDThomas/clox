@@ -9,5 +9,6 @@ print !nil;     // expect: true
 
 print !"";       // expect: false
 
-// TODO: add in func tests once funcs are implemented
-// https://github.com/munificent/craftinginterpreters/blob/fa65a1cbf55a17e8c6367a7379c05069f4d2a6d5/test/operator/not.lox#L12-L13
+// TODO: Add once funcs in clox
+// fun foo() {}
+// print !foo;

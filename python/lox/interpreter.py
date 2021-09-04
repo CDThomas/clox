@@ -207,7 +207,7 @@ class Interpreter:
         if len(arguments) != callee.arity():
             message = (
                 f"Expected {callee.arity()} arguments"
-                f"but got {len(arguments)}."
+                f" but got {len(arguments)}."
             )
 
             raise errors.LoxRuntimeError(expression.closing_paren, message)
