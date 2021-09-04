@@ -43,13 +43,16 @@ test_pylox:
 	test/assignment/undefined.lox \
 	"test/bool/*" \
 	"test/block/*" \
+	"test/call/*" \
 	"test/comments/*" \
 	"test/for/*" \
+	"test/function/*" \
 	"test/if/*" \
 	"test/logical_operator/*" \
 	"test/nil/*" \
 	test/number/literals.lox \
 	"test/operator/*" \
+	test/string/literals.lox \
 	test/variable/in_middle_of_block.lox \
 	test/variable/in_nested_block.lox \
 	test/variable/scope_reuse_in_different_blocks.lox \
@@ -62,6 +65,7 @@ test_pylox:
 	test/variable/undefined_global.lox \
 	test/variable/uninitialized.lox \
 	test/variable/use_global_in_initializer.lox \
+	"test/while/*" \
 	test/empty_file.lox \
 	test/precedence.lox
 
