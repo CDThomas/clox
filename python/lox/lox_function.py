@@ -11,8 +11,13 @@ if typing.TYPE_CHECKING:
 
 
 class LoxFunction(lox_callable.LoxCallable):
-    def __init__(self, declaration: ast.FunctionDeclaration) -> None:
+    def __init__(
+        self,
+        declaration: ast.FunctionDeclaration,
+        closure: environment.Environment,
+    ) -> None:
         self.declaration = declaration
+        self.closure = closure
 
     def arity(self) -> int:
         return len(self.declaration.params)
@@ -22,7 +27,7 @@ class LoxFunction(lox_callable.LoxCallable):
         interpreter: "interpreter.Interpreter",
         arguments: list[typing.Optional[types.Value]],
     ) -> typing.Optional[types.Value]:
-        env = environment.Environment(interpreter.globals)
+        env = environment.Environment(self.closure)
 
         for index, param in enumerate(self.declaration.params):
             env.define(param.value, arguments[index])
