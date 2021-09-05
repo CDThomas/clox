@@ -198,9 +198,8 @@ class Interpreter(
 
         arguments: list[typing.Optional[types.Value]] = []
 
-        if expression.arguments:
-            for argument in expression.arguments:
-                arguments.append(self._evaluate(argument))
+        for argument in expression.arguments:
+            arguments.append(self._evaluate(argument))
 
         if not isinstance(callee, lox_callable.LoxCallable):
             raise errors.LoxRuntimeError(
@@ -228,7 +227,7 @@ class Interpreter(
 
     def _execute_block(
         self,
-        statements: typing.Optional[list[ast._Statement]],
+        statements: list[ast._Statement],
         environment: environment.Environment,
     ) -> None:
         if not statements:

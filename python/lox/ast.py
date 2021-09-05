@@ -106,7 +106,10 @@ class WhileStatement(_Statement):
 
 @dataclasses.dataclass
 class Block(_Statement, ast_utils.AsList):
-    statements: typing.Optional[list[_Statement]] = None
+    statements: list[_Statement]
+
+    def __init__(self, statements: typing.Optional[list[_Statement]]):
+        self.statements = statements or []
 
     def accept(self, visitor: "visitor.StatementVisitor[S]") -> "S":
         return visitor.visit_block_statement(self)
@@ -152,8 +155,18 @@ class Binary(_Expression):
 @dataclasses.dataclass
 class Call(_Expression):
     callee: _Expression
-    arguments: typing.Optional[list[_Expression]]
+    arguments: list[_Expression]
     closing_paren: lark.Token
+
+    def __init__(
+        self,
+        callee: _Expression,
+        arguments: typing.Optional[list[_Expression]],
+        closing_paren: lark.Token,
+    ) -> None:
+        self.callee = callee
+        self.arguments = arguments or []
+        self.closing_paren = closing_paren
 
     def accept(self, visitor: "visitor.ExpressionVisitor[T]") -> "T":
         return visitor.visit_call_expression(self)
