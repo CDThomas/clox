@@ -7,6 +7,7 @@ import lark
 import lox.errors
 import lox.interpreter
 import lox.parser
+import lox.resolver
 
 
 class InterpreterResult(enum.Enum):
@@ -61,14 +62,16 @@ def _run(
 ) -> InterpreterResult:
 
     try:
-        ast = lox.parser.parse(code)
+        statements = lox.parser.parse(code)
     except lark.UnexpectedInput as u:
         print("Syntax error:\n")
         print(u)
         return InterpreterResult.SYNTAX_ERROR
 
     try:
-        interpreter.interpret(ast)
+        resolver = lox.resolver.Resolver(interpreter)
+        resolver.resolve(statements)
+        interpreter.interpret(statements)
     except lox.errors.LoxRuntimeError as error:
         print(error.message, file=sys.stderr)
         print(f"[line {error.token.line}]", file=sys.stderr)

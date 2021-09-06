@@ -74,6 +74,6 @@ parser = lark.Lark.open(
 transformer = ast_utils.create_transformer(ast, ToAst())
 
 
-def parse(text):
+def parse(text: str) -> list[ast._Statement]:
     tree = parser.parse(text)
     return transformer.transform(tree)

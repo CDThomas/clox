@@ -22,6 +22,7 @@ class Interpreter(
 
         self.globals = globals
         self.environment = globals
+        self.locals: dict[ast._Expression, int] = {}
 
     def interpret(self, statements: list[ast._Statement]) -> None:
         for statement in statements:
@@ -83,7 +84,14 @@ class Interpreter(
         self, expression: ast.Assignment
     ) -> typing.Optional[types.Value]:
         value = self._evaluate(expression.value)
-        self.environment.assign(expression.name, value)
+
+        distance = self.locals.get(expression)
+
+        if distance is not None:
+            self.environment.assign_at(distance, expression.name, value)
+        else:
+            self.globals.assign(expression.name, value)
+
         return value
 
     def visit_literal_expression(
@@ -127,7 +135,7 @@ class Interpreter(
     def visit_variable_expression(
         self, expression: ast.Variable
     ) -> typing.Optional[types.Value]:
-        return self.environment.get(expression.name)
+        return self._look_up_variable(expression.name, expression)
 
     def visit_binary_expression(
         self, expression: ast.Binary
@@ -221,6 +229,18 @@ class Interpreter(
         self._execute_block(
             statement.statements, environment.Environment(self.environment)
         )
+
+    def resolve(self, expression: ast._Expression, depth: int) -> None:
+        self.locals[expression] = depth
+
+    def _look_up_variable(
+        self, name: lark.Token, expression: ast._Expression
+    ) -> typing.Optional[types.Value]:
+        distance = self.locals.get(expression)
+        if distance is not None:
+            return self.environment.get_at(distance, name.value)
+        else:
+            return self.environment.get(name)
 
     def _execute(self, statement: ast._Statement) -> None:
         return statement.accept(self)
