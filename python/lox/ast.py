@@ -30,6 +30,12 @@ class _Expression(abc.ABC, _Ast):
     def accept(self, visitor: "visitor.ExpressionVisitor[T]") -> "T":
         raise NotImplementedError
 
+    def __hash__(self) -> int:
+        return hash(id(self))
+
+    def __eq__(self, other) -> bool:
+        return self is other
+
 
 @dataclasses.dataclass
 class FunctionDeclaration(_Statement):
@@ -62,8 +68,6 @@ class FunctionDeclaration(_Statement):
 @dataclasses.dataclass
 class VariableDeclaration(_Statement):
     name: lark.Token
-    # TODO: consider replacing defaults like this with [...] syntax
-    # in grammar file
     initializer: typing.Optional[_Expression] = None
 
     def accept(self, visitor: "visitor.StatementVisitor[S]") -> "S":
@@ -125,7 +129,7 @@ class IfStatement(_Statement):
         return visitor.visit_if_statement(self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False, unsafe_hash=True)
 class Literal(_Expression):
     value: typing.Optional[Value]
 
@@ -133,7 +137,7 @@ class Literal(_Expression):
         return visitor.visit_literal_expression(self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False, unsafe_hash=True)
 class Unary(_Expression):
     operator: lark.Token
     right: _Expression
@@ -142,7 +146,7 @@ class Unary(_Expression):
         return visitor.visit_unary_expression(self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False, unsafe_hash=True)
 class Binary(_Expression):
     left: _Expression
     operator: lark.Token
@@ -152,7 +156,7 @@ class Binary(_Expression):
         return visitor.visit_binary_expression(self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False, unsafe_hash=True)
 class Call(_Expression):
     callee: _Expression
     arguments: list[_Expression]
@@ -172,7 +176,7 @@ class Call(_Expression):
         return visitor.visit_call_expression(self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False, unsafe_hash=True)
 class Grouping(_Expression):
     expression: _Expression
 
@@ -180,7 +184,7 @@ class Grouping(_Expression):
         return visitor.visit_grouping_expression(self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False, unsafe_hash=True)
 class Variable(_Expression):
     name: lark.Token
 
@@ -188,7 +192,7 @@ class Variable(_Expression):
         return visitor.visit_variable_expression(self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False, unsafe_hash=True)
 class Assignment(_Expression):
     name: lark.Token
     value: _Expression
@@ -197,7 +201,7 @@ class Assignment(_Expression):
         return visitor.visit_assignment_expression(self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(eq=False, unsafe_hash=True)
 class LogicalExpression(_Expression):
     left: _Expression
     operator: lark.Token

@@ -48,7 +48,7 @@ class Resolver(
         return None
 
     def visit_variable_expression(self, expression: ast.Variable) -> None:
-        if self.scopes and self.scopes[-1][expression.name.value] is False:
+        if self.scopes and self.scopes[-1].get(expression.name.value) is False:
             raise errors.LoxRuntimeError(
                 expression.name,
                 "Can't read local variable in its own initializer.",
@@ -164,7 +164,7 @@ class Resolver(
     def _resolve_local(
         self, expression: ast._Expression, name: lark.Token
     ) -> None:
-        for index, scope in enumerate(self.scopes):
-            if scope[name.value]:
+        for index, scope in enumerate(reversed(self.scopes)):
+            if scope.get(name.value):
                 self.interpreter.resolve(expression, index)
                 return
