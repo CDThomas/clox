@@ -44,6 +44,7 @@ test_pylox:
 	"test/bool/*" \
 	"test/block/*" \
 	"test/call/*" \
+	"test/closure/*" \
 	"test/comments/*" \
 	"test/for/*" \
 	"test/function/*" \
@@ -52,7 +53,12 @@ test_pylox:
 	"test/nil/*" \
 	test/number/literals.lox \
 	"test/operator/*" \
+	"test/return/*" \
 	test/string/literals.lox \
+	test/variable/collide_with_parameter.lox \
+	test/variable/duplicate_local.lox \
+	test/variable/duplicate_parameter.lox \
+	test/variable/early_bound.lox \
 	test/variable/in_middle_of_block.lox \
 	test/variable/in_nested_block.lox \
 	test/variable/scope_reuse_in_different_blocks.lox \
