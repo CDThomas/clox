@@ -32,6 +32,11 @@ To run all tests for Pylox:
 $ make test_pylox
 ```
 
+To check types with Mypy:
+```
+$ make typecheck_pylox
+```
+
 ## Clox
 
 Clox is lifted directly from the code in the book (apart from some minor differences in formatting). The source code is in the [`c`](./c) directory.
@@ -83,3 +88,14 @@ optional arguments:
   -h, --help        show this help message and exit
 ```
 
+### Developing
+
+To run all tests that test the test runner itself:
+```
+$ make test_tooling
+```
+
+To check types with Mypy:
+```
+$ make typecheck_tooling
+```
