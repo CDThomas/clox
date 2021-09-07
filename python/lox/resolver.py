@@ -188,7 +188,7 @@ class Resolver(
     def _resolve_local(
         self, expression: ast._Expression, name: lark.Token
     ) -> None:
-        for index, scope in enumerate(reversed(self.scopes)):
-            if scope.get(name.value):
-                self.interpreter.resolve(expression, index)
+        for depth, scope in enumerate(reversed(self.scopes)):
+            if name.value in scope:
+                self.interpreter.resolve(expression, depth)
                 return
