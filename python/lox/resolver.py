@@ -1,3 +1,4 @@
+import enum
 import typing
 
 import lark
@@ -8,12 +9,18 @@ from lox import interpreter
 from lox import visitor
 
 
+class FunctionType(enum.Enum):
+    NONE = (enum.auto(),)
+    FUNCTION = enum.auto()
+
+
 class Resolver(
     visitor.ExpressionVisitor[None], visitor.StatementVisitor[None]
 ):
     def __init__(self, interpreter: interpreter.Interpreter) -> None:
         self.interpreter = interpreter
         self.scopes: list[dict[str, bool]] = []
+        self.current_function = FunctionType.NONE
 
     def resolve(
         self,
@@ -49,7 +56,7 @@ class Resolver(
 
     def visit_variable_expression(self, expression: ast.Variable) -> None:
         if self.scopes and self.scopes[-1].get(expression.name.value) is False:
-            raise errors.LoxRuntimeError(
+            raise errors.LoxResolutionError(
                 expression.name,
                 "Can't read local variable in its own initializer.",
             )
@@ -67,7 +74,7 @@ class Resolver(
     ) -> None:
         self._declare(statement.name)
         self._define(statement.name)
-        self._resolve_function(statement)
+        self._resolve_function(statement, FunctionType.FUNCTION)
         return None
 
     def visit_expression_statement(
@@ -90,6 +97,11 @@ class Resolver(
         return None
 
     def visit_return_statement(self, statement: ast.ReturnStatement) -> None:
+        if self.current_function == FunctionType.NONE:
+            raise errors.LoxResolutionError(
+                statement.keyword, "Can't return from top-level code."
+            )
+
         if statement.value:
             self.resolve(statement.value)
 
@@ -138,20 +150,32 @@ class Resolver(
     def _end_scope(self) -> None:
         self.scopes.pop()
 
-    def _resolve_function(self, func: ast.FunctionDeclaration) -> None:
+    def _resolve_function(
+        self, func: ast.FunctionDeclaration, func_type: FunctionType
+    ) -> None:
+        enclosing_function = self.current_function
+        self.current_function = func_type
         self._begin_scope()
+
         for param in func.params:
             self._declare(param)
             self._define(param)
 
         self.resolve(func.body)
         self._end_scope()
+        self.current_function = enclosing_function
 
     def _declare(self, name: lark.Token) -> None:
         if not self.scopes:
             return
 
         scope = self.scopes[-1]
+
+        if name.value in scope:
+            raise errors.LoxResolutionError(
+                name, "Already a variable with this name in this scope."
+            )
+
         scope[name.value] = False
 
     def _define(self, name: lark.Token) -> None:

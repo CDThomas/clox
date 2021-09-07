@@ -63,14 +63,23 @@ def _run(
 
     try:
         statements = lox.parser.parse(code)
-    except lark.UnexpectedInput as u:
-        print("Syntax error:\n")
-        print(u)
+    except lark.UnexpectedInput as error:
+        print(f"Syntax error:\n\n{error}", file=sys.stderr)
         return InterpreterResult.SYNTAX_ERROR
 
     try:
         resolver = lox.resolver.Resolver(interpreter)
         resolver.resolve(statements)
+    except lox.errors.LoxResolutionError as error:
+        message = (
+            f"[line {error.token.line}] "
+            f"Error at '{error.token.value}': {error.message}"
+        )
+        print(message, file=sys.stderr)
+
+        return InterpreterResult.SYNTAX_ERROR
+
+    try:
         interpreter.interpret(statements)
     except lox.errors.LoxRuntimeError as error:
         print(error.message, file=sys.stderr)
