@@ -70,6 +70,7 @@ test_pylox:
 	test/variable/redefine_global.lox \
 	test/variable/undefined_global.lox \
 	test/variable/uninitialized.lox \
+	test/variable/use_local_in_initializer.lox \
 	test/variable/use_global_in_initializer.lox \
 	"test/while/*" \
 	test/empty_file.lox \
