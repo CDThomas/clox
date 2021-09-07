@@ -240,7 +240,7 @@ class Interpreter(
         if distance is not None:
             return self.environment.get_at(distance, name.value)
         else:
-            return self.environment.get(name)
+            return self.globals.get(name)
 
     def _execute(self, statement: ast._Statement) -> None:
         return statement.accept(self)
