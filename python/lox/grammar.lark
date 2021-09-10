@@ -51,6 +51,7 @@ return_statement: _return_keyword [expression] ";"
 
 ?assignment: logic_or
            | IDENTIFIER "=" assignment -> assignment
+           | call "." IDENTIFIER "=" assignment -> set
 
 ?logic_or: logic_and
          | logic_or _logic_or_operator logic_and -> logical_expression
@@ -75,6 +76,7 @@ return_statement: _return_keyword [expression] ";"
 
 ?call: primary
      | call "(" [arguments] _closing_paren -> call
+     | call "." IDENTIFIER -> get
 
 // Used for returning the closing paren's location when reporting runtime
 // errors caused by function calls.
