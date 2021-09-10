@@ -129,6 +129,15 @@ class Resolver(
 
         return None
 
+    def visit_get_expression(self, expression: ast.Get) -> None:
+        self.resolve(expression.obj)
+        return None
+
+    def visit_set_expression(self, expression: ast.Set) -> None:
+        self.resolve(expression.value)
+        self.resolve(expression.obj)
+        return None
+
     def visit_grouping_expression(self, expression: ast.Grouping) -> None:
         self.resolve(expression.expression)
         return None

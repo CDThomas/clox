@@ -1,7 +1,7 @@
 import lark
 import typing
 
-from lox import ast
+from lox import ast, lox_instance
 from lox import environment
 from lox import errors
 from lox import lox_callable
@@ -223,6 +223,34 @@ class Interpreter(
             raise errors.LoxRuntimeError(expression.closing_paren, message)
 
         return callee.call(self, arguments)
+
+    def visit_get_expression(
+        self, expression: ast.Get
+    ) -> typing.Optional[types.Value]:
+        obj = self._evaluate(expression.obj)
+
+        if isinstance(obj, lox_instance.LoxInstance):
+            return obj.get(expression.name)
+
+        raise errors.LoxRuntimeError(
+            expression.name, "Only instances have properties."
+        )
+
+    def visit_set_expression(
+        self, expression: ast.Set
+    ) -> typing.Optional[types.Value]:
+        obj = self._evaluate(expression.obj)
+
+        if not isinstance(obj, lox_instance.LoxInstance):
+            raise errors.LoxRuntimeError(
+                expression.name, "Only instances have fields."
+            )
+
+        value = self._evaluate(expression.value)
+
+        obj.set(expression.name, value)
+
+        return value
 
     def visit_block_statement(self, statement: ast.Block) -> None:
         self._execute_block(

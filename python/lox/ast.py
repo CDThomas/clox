@@ -190,6 +190,25 @@ class Call(_Expression):
 
 
 @dataclasses.dataclass(eq=False, unsafe_hash=True)
+class Get(_Expression):
+    obj: _Expression
+    name: lark.Token
+
+    def accept(self, visitor: "visitor.ExpressionVisitor[T]") -> "T":
+        return visitor.visit_get_expression(self)
+
+
+@dataclasses.dataclass(eq=False, unsafe_hash=True)
+class Set(_Expression):
+    obj: _Expression
+    name: lark.Token
+    value: _Expression
+
+    def accept(self, visitor: "visitor.ExpressionVisitor[T]") -> "T":
+        return visitor.visit_set_expression(self)
+
+
+@dataclasses.dataclass(eq=False, unsafe_hash=True)
 class Grouping(_Expression):
     expression: _Expression
 
