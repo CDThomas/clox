@@ -304,13 +304,10 @@ class Interpreter(
             else:
                 return text
 
-        if isinstance(value, lox_callable.LoxCallable):
-            return value.to_string()
+        if isinstance(value, str):
+            return value
 
-        if isinstance(value, lox_class.LoxClass):
-            return value.to_string()
-
-        return value
+        return value.to_string()
 
     def _check_number_operand(
         self, operator: lark.Token, operand: typing.Optional[types.Value]
