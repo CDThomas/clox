@@ -38,7 +38,7 @@ class _Expression(abc.ABC, _Ast):
 
 
 @dataclasses.dataclass
-class FunctionDeclaration(_Statement):
+class Function(_Statement):
     name: lark.Token
     params: list[lark.Token]
     body: list[_Statement]
@@ -62,7 +62,7 @@ class FunctionDeclaration(_Statement):
         self.body = body
 
     def accept(self, visitor: "visitor.StatementVisitor[S]") -> "S":
-        return visitor.visit_function_declaration(self)
+        return visitor.visit_function(self)
 
 
 @dataclasses.dataclass
@@ -117,6 +117,19 @@ class Block(_Statement, ast_utils.AsList):
 
     def accept(self, visitor: "visitor.StatementVisitor[S]") -> "S":
         return visitor.visit_block_statement(self)
+
+
+@dataclasses.dataclass
+class ClassDeclaration(_Statement):
+    name: lark.Token
+    methods: list[Function]
+
+    def __init__(self, name: lark.Token, *methods: Function):
+        self.name = name
+        self.methods = list(methods)
+
+    def accept(self, visitor: "visitor.StatementVisitor[S]") -> "S":
+        return visitor.visit_class_declaration(self)
 
 
 @dataclasses.dataclass

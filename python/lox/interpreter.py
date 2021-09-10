@@ -5,6 +5,7 @@ from lox import ast
 from lox import environment
 from lox import errors
 from lox import lox_callable
+from lox import lox_class
 from lox import lox_function
 from lox import lox_globals
 from lox import lox_return
@@ -36,9 +37,7 @@ class Interpreter(
         self._evaluate(statement.expression)
         return None
 
-    def visit_function_declaration(
-        self, statement: ast.FunctionDeclaration
-    ) -> None:
+    def visit_function(self, statement: ast.Function) -> None:
         func = lox_function.LoxFunction(statement, self.environment)
         self.environment.define(statement.name.value, func)
 
@@ -230,6 +229,11 @@ class Interpreter(
             statement.statements, environment.Environment(self.environment)
         )
 
+    def visit_class_declaration(self, statement: ast.ClassDeclaration) -> None:
+        self.environment.define(statement.name.value, None)
+        klass = lox_class.LoxClass(statement.name.value)
+        self.environment.assign(statement.name, klass)
+
     def resolve(self, expression: ast._Expression, depth: int) -> None:
         self.locals[expression] = depth
 
@@ -301,6 +305,9 @@ class Interpreter(
                 return text
 
         if isinstance(value, lox_callable.LoxCallable):
+            return value.to_string()
+
+        if isinstance(value, lox_class.LoxClass):
             return value.to_string()
 
         return value
