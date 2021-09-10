@@ -13,7 +13,7 @@ if typing.TYPE_CHECKING:
 class LoxFunction(lox_callable.LoxCallable):
     def __init__(
         self,
-        declaration: ast.FunctionDeclaration,
+        declaration: ast.Function,
         closure: environment.Environment,
     ) -> None:
         self.declaration = declaration

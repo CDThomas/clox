@@ -15,9 +15,7 @@ class StatementVisitor(abc.ABC, typing.Generic[S]):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def visit_function_declaration(
-        self, statement: ast.FunctionDeclaration
-    ) -> S:
+    def visit_function(self, statement: ast.Function) -> S:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -44,6 +42,10 @@ class StatementVisitor(abc.ABC, typing.Generic[S]):
 
     @abc.abstractmethod
     def visit_block_statement(self, statement: ast.Block) -> S:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def visit_class_declaration(self, statement: ast.ClassDeclaration) -> S:
         raise NotImplementedError
 
 

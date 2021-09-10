@@ -42,6 +42,11 @@ class Resolver(
         self._end_scope()
         return None
 
+    def visit_class_declaration(self, statement: ast.ClassDeclaration) -> None:
+        self._declare(statement.name)
+        self._define(statement.name)
+        return None
+
     def visit_variable_declaration(
         self, statement: ast.VariableDeclaration
     ) -> None:
@@ -69,9 +74,7 @@ class Resolver(
         self._resolve_local(expression, expression.name)
         return None
 
-    def visit_function_declaration(
-        self, statement: ast.FunctionDeclaration
-    ) -> None:
+    def visit_function(self, statement: ast.Function) -> None:
         self._declare(statement.name)
         self._define(statement.name)
         self._resolve_function(statement, FunctionType.FUNCTION)
@@ -151,7 +154,7 @@ class Resolver(
         self.scopes.pop()
 
     def _resolve_function(
-        self, func: ast.FunctionDeclaration, func_type: FunctionType
+        self, func: ast.Function, func_type: FunctionType
     ) -> None:
         enclosing_function = self.current_function
         self.current_function = func_type

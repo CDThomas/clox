@@ -1,15 +1,20 @@
 program: declaration*
 
-?declaration: function_declaration
+?declaration: class_declaration
+            | function_declaration
             | variable_declaration
             | statement
 
-function_declaration: "fun" _function
+class_declaration: "class" IDENTIFIER "{" method* "}"
+
+method: _function -> function
+
+function_declaration: "fun" _function -> function
 
 _function: IDENTIFIER "(" [parameters] ")" block
 
 // Not an AST node. Used for collecting arguments into a list for
-// ast.FunctionDeclaration nodes.
+// ast.Function nodes.
 parameters: IDENTIFIER ( "," IDENTIFIER )*
 
 variable_declaration: "var" IDENTIFIER ( "=" expression )? ";"
@@ -103,7 +108,6 @@ const_true: "true"
 const_false: "false"
 const_nil: "nil"
 
-// TODO: write own terminals based on Lox grammar instead
 %import common.NUMBER
 %import common.ESCAPED_STRING -> STRING
 %import common.CNAME -> IDENTIFIER
