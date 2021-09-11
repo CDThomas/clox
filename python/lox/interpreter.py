@@ -13,6 +13,8 @@ from lox import lox_return
 from lox import types
 from lox import visitor
 
+ObjId = typing.NewType("ObjId", int)
+
 
 class Interpreter(
     visitor.StatementVisitor[None],
@@ -24,7 +26,7 @@ class Interpreter(
 
         self.globals = globals
         self.environment = globals
-        self.locals: dict[ast._Expression, int] = {}
+        self.locals: dict[ObjId, int] = {}
 
     def interpret(self, statements: list[ast._Statement]) -> None:
         for statement in statements:
@@ -85,7 +87,7 @@ class Interpreter(
     ) -> typing.Optional[types.Value]:
         value = self._evaluate(expression.value)
 
-        distance = self.locals.get(expression)
+        distance = self.locals.get(self._obj_id(expression))
 
         if distance is not None:
             self.environment.assign_at(distance, expression.name, value)
@@ -270,12 +272,12 @@ class Interpreter(
         self.environment.assign(statement.name, klass)
 
     def resolve(self, expression: ast._Expression, depth: int) -> None:
-        self.locals[expression] = depth
+        self.locals[self._obj_id(expression)] = depth
 
     def _look_up_variable(
         self, name: lark.Token, expression: ast._Expression
     ) -> typing.Optional[types.Value]:
-        distance = self.locals.get(expression)
+        distance = self.locals.get(self._obj_id(expression))
         if distance is not None:
             return self.environment.get_at(distance, name.value)
         else:
@@ -362,3 +364,12 @@ class Interpreter(
             return left, right
 
         raise errors.LoxRuntimeError(operator, "Operands must be numbers.")
+
+    # XXX: Returns Python's internal ID for the expression's AST node. This is
+    # a workaround for Lark requiring mutable AST node objects and Python
+    # needing immutable dict keys. This isn't ideal since IDs can be reused
+    # once objects are garbage collected, but should be OK since the ID is
+    # used to keep track of local vars which are all held in memory at the
+    # same time.
+    def _obj_id(self, obj: ast._Expression) -> ObjId:
+        return ObjId(id(obj))
