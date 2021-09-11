@@ -12,6 +12,7 @@ from lox import visitor
 class FunctionType(enum.Enum):
     NONE = enum.auto()
     FUNCTION = enum.auto()
+    INITIALIZER = enum.auto()
     METHOD = enum.auto()
 
 
@@ -60,7 +61,12 @@ class Resolver(
         self.scopes[-1]["this"] = True
 
         for method in statement.methods:
-            declaration = FunctionType.METHOD
+            declaration = (
+                FunctionType.INITIALIZER
+                if method.name.value == "init"
+                else FunctionType.METHOD
+            )
+
             self._resolve_function(method, declaration)
 
         self._end_scope()
@@ -127,6 +133,12 @@ class Resolver(
             )
 
         if statement.value:
+            if self.current_function == FunctionType.INITIALIZER:
+                raise errors.LoxResolutionError(
+                    statement.keyword,
+                    "Can't return a value from an initializer.",
+                )
+
             self.resolve(statement.value)
 
         return None

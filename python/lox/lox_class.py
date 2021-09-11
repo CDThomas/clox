@@ -30,10 +30,19 @@ class LoxClass(lox_callable.LoxCallable):
         arguments: list[typing.Optional[types.Value]],
     ) -> typing.Optional[types.Value]:
         instance = lox_instance.LoxInstance(self)
+
+        if initializer := self.find_method("init"):
+            initializer.bind(instance).call(interpreter, arguments)
+
         return instance
 
     def arity(self) -> int:
-        return 0
+        initializer = self.find_method("init")
+
+        if not initializer:
+            return 0
+
+        return initializer.arity()
 
     def to_string(self) -> str:
         return self.name
