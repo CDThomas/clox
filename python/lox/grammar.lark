@@ -91,10 +91,13 @@ arguments: expression ( "," expression )*
         | const_true -> literal
         | const_false -> literal
         | const_nil -> literal
+        | this
         | "(" expression ")" -> grouping
         | variable
 
 variable: IDENTIFIER
+
+!this: "this"
 
 !_equality_operator: "!=" | "=="
 !_comparison_operator: ">" | ">=" | "<" | "<="

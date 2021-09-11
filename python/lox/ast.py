@@ -203,6 +203,14 @@ class Set(_Expression):
 
 
 @dataclasses.dataclass()
+class This(_Expression):
+    keyword: lark.Token
+
+    def accept(self, visitor: "visitor.ExpressionVisitor[T]") -> "T":
+        return visitor.visit_this_expression(self)
+
+
+@dataclasses.dataclass()
 class Grouping(_Expression):
     expression: _Expression
 

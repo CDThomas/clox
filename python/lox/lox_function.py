@@ -3,6 +3,7 @@ import typing
 from lox import ast
 from lox import environment
 from lox import lox_callable
+from lox import lox_instance
 from lox import lox_return
 from lox import types
 
@@ -18,6 +19,11 @@ class LoxFunction(lox_callable.LoxCallable):
     ) -> None:
         self.declaration = declaration
         self.closure = closure
+
+    def bind(self, instance: lox_instance.LoxInstance) -> "LoxFunction":
+        env = environment.Environment(self.closure)
+        env.define("this", instance)
+        return LoxFunction(self.declaration, env)
 
     def arity(self) -> int:
         return len(self.declaration.params)
