@@ -41,7 +41,7 @@ class Interpreter(
         return None
 
     def visit_function(self, statement: ast.Function) -> None:
-        func = lox_function.LoxFunction(statement, self.environment)
+        func = lox_function.LoxFunction(statement, self.environment, False)
         self.environment.define(statement.name.value, func)
 
         return None
@@ -270,7 +270,9 @@ class Interpreter(
 
         methods: dict[str, lox_function.LoxFunction] = {}
         for method in statement.methods:
-            func = lox_function.LoxFunction(method, self.environment)
+            func = lox_function.LoxFunction(
+                method, self.environment, method.name.value == "init"
+            )
             methods[method.name.value] = func
 
         klass = lox_class.LoxClass(statement.name.value, methods)
