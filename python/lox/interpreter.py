@@ -255,6 +255,11 @@ class Interpreter(
 
         return value
 
+    def visit_this_expression(
+        self, expression: ast.This
+    ) -> typing.Optional[types.Value]:
+        return self._look_up_variable(expression.keyword, expression)
+
     def visit_block_statement(self, statement: ast.Block) -> None:
         self._execute_block(
             statement.statements, environment.Environment(self.environment)

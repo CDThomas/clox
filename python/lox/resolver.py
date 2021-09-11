@@ -47,9 +47,14 @@ class Resolver(
         self._declare(statement.name)
         self._define(statement.name)
 
+        self._begin_scope()
+        self.scopes[-1]["this"] = True
+
         for method in statement.methods:
             declaration = FunctionType.METHOD
             self._resolve_function(method, declaration)
+
+        self._end_scope()
 
         return None
 
@@ -142,6 +147,10 @@ class Resolver(
     def visit_set_expression(self, expression: ast.Set) -> None:
         self.resolve(expression.value)
         self.resolve(expression.obj)
+        return None
+
+    def visit_this_expression(self, expression: ast.This) -> None:
+        self._resolve_local(expression, expression.keyword)
         return None
 
     def visit_grouping_expression(self, expression: ast.Grouping) -> None:

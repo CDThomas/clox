@@ -89,3 +89,7 @@ class ExpressionVisitor(abc.ABC, typing.Generic[T]):
     @abc.abstractmethod
     def visit_set_expression(self, expression: ast.Set) -> T:
         raise NotImplementedError
+
+    @abc.abstractmethod
+    def visit_this_expression(self, expression: ast.This) -> T:
+        raise NotImplementedError
