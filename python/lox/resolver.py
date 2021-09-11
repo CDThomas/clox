@@ -10,9 +10,14 @@ from lox import visitor
 
 
 class FunctionType(enum.Enum):
-    NONE = (enum.auto(),)
+    NONE = enum.auto()
     FUNCTION = enum.auto()
     METHOD = enum.auto()
+
+
+class ClassType(enum.Enum):
+    NONE = enum.auto()
+    CLASS = enum.auto()
 
 
 class Resolver(
@@ -22,6 +27,7 @@ class Resolver(
         self.interpreter = interpreter
         self.scopes: list[dict[str, bool]] = []
         self.current_function = FunctionType.NONE
+        self.current_class = ClassType.NONE
 
     def resolve(
         self,
@@ -44,6 +50,9 @@ class Resolver(
         return None
 
     def visit_class_declaration(self, statement: ast.ClassDeclaration) -> None:
+        enclosing_class = self.current_class
+        self.current_class = ClassType.CLASS
+
         self._declare(statement.name)
         self._define(statement.name)
 
@@ -55,6 +64,7 @@ class Resolver(
             self._resolve_function(method, declaration)
 
         self._end_scope()
+        self.current_class = enclosing_class
 
         return None
 
@@ -150,7 +160,13 @@ class Resolver(
         return None
 
     def visit_this_expression(self, expression: ast.This) -> None:
+        if self.current_class == ClassType.NONE:
+            raise errors.LoxResolutionError(
+                expression.keyword, "Can't use 'this' outside of a class."
+            )
+
         self._resolve_local(expression, expression.keyword)
+
         return None
 
     def visit_grouping_expression(self, expression: ast.Grouping) -> None:
