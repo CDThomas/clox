@@ -12,6 +12,7 @@ from lox import visitor
 class FunctionType(enum.Enum):
     NONE = (enum.auto(),)
     FUNCTION = enum.auto()
+    METHOD = enum.auto()
 
 
 class Resolver(
@@ -45,6 +46,11 @@ class Resolver(
     def visit_class_declaration(self, statement: ast.ClassDeclaration) -> None:
         self._declare(statement.name)
         self._define(statement.name)
+
+        for method in statement.methods:
+            declaration = FunctionType.METHOD
+            self._resolve_function(method, declaration)
+
         return None
 
     def visit_variable_declaration(

@@ -18,6 +18,9 @@ class LoxInstance:
         if name.value in self.fields:
             return self.fields[name.value]
 
+        if method := self.klass.find_method(name.value):
+            return method
+
         raise errors.LoxRuntimeError(name, f"Undefined property {name.value}.")
 
     def set(

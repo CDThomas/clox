@@ -1,6 +1,7 @@
 import typing
 
 from lox import lox_callable
+from lox import lox_function
 from lox import lox_instance
 from lox import types
 
@@ -9,8 +10,19 @@ if typing.TYPE_CHECKING:
 
 
 class LoxClass(lox_callable.LoxCallable):
-    def __init__(self, name: str) -> None:
+    def __init__(
+        self, name: str, methods: dict[str, lox_function.LoxFunction]
+    ) -> None:
         self.name = name
+        self.methods = methods
+
+    def find_method(
+        self, name: str
+    ) -> typing.Optional[lox_function.LoxFunction]:
+        if name in self.methods:
+            return self.methods[name]
+
+        return None
 
     def call(
         self,

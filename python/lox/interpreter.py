@@ -1,13 +1,14 @@
 import lark
 import typing
 
-from lox import ast, lox_instance
+from lox import ast
 from lox import environment
 from lox import errors
 from lox import lox_callable
 from lox import lox_class
 from lox import lox_function
 from lox import lox_globals
+from lox import lox_instance
 from lox import lox_return
 from lox import types
 from lox import visitor
@@ -259,7 +260,13 @@ class Interpreter(
 
     def visit_class_declaration(self, statement: ast.ClassDeclaration) -> None:
         self.environment.define(statement.name.value, None)
-        klass = lox_class.LoxClass(statement.name.value)
+
+        methods: dict[str, lox_function.LoxFunction] = {}
+        for method in statement.methods:
+            func = lox_function.LoxFunction(method, self.environment)
+            methods[method.name.value] = func
+
+        klass = lox_class.LoxClass(statement.name.value, methods)
         self.environment.assign(statement.name, klass)
 
     def resolve(self, expression: ast._Expression, depth: int) -> None:
