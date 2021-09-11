@@ -1,0 +1,5 @@
+// This is a regression test. There was a bug where assigning to an undefined
+// variable would cause Pylox to crash (with a Python error) if the RHS of the
+// assignment was a call expression.
+fun func() {}
+unknown = func(); // expect runtime error: Undefined variable 'unknown'.
