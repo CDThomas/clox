@@ -5,7 +5,9 @@ program: declaration*
             | variable_declaration
             | statement
 
-class_declaration: "class" IDENTIFIER "{" method* "}"
+class_declaration: "class" IDENTIFIER [ "<" superclass ] "{" method* "}"
+
+?superclass: variable
 
 method: _function -> function
 
