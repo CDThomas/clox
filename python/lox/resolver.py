@@ -57,6 +57,17 @@ class Resolver(
         self._declare(statement.name)
         self._define(statement.name)
 
+        if (
+            statement.superclass
+            and statement.name.value == statement.superclass.name.value
+        ):
+            raise errors.LoxResolutionError(
+                statement.superclass.name, "A class can't inherit from itself."
+            )
+
+        if statement.superclass:
+            self.resolve(statement.superclass)
+
         self._begin_scope()
         self.scopes[-1]["this"] = True
 

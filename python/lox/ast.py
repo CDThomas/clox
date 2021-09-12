@@ -116,10 +116,17 @@ class Block(_Statement, ast_utils.AsList):
 @dataclasses.dataclass
 class ClassDeclaration(_Statement):
     name: lark.Token
+    superclass: typing.Optional["Variable"]
     methods: list[Function]
 
-    def __init__(self, name: lark.Token, *methods: Function):
+    def __init__(
+        self,
+        name: lark.Token,
+        superclass: typing.Optional["Variable"],
+        *methods: Function
+    ):
         self.name = name
+        self.superclass = superclass
         self.methods = list(methods)
 
     def accept(self, visitor: "visitor.StatementVisitor[S]") -> "S":

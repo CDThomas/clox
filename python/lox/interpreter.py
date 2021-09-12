@@ -266,6 +266,19 @@ class Interpreter(
         )
 
     def visit_class_declaration(self, statement: ast.ClassDeclaration) -> None:
+        superclass: typing.Optional[types.Value] = None
+        if statement.superclass:
+            superclass = self._evaluate(statement.superclass)
+
+            if not isinstance(superclass, lox_class.LoxClass):
+                raise errors.LoxRuntimeError(
+                    statement.superclass.name, "Superclass must be a class."
+                )
+
+        # Need this assertion since Mypy doesn't seem to automatically narrow
+        # this type from the nested if statement above.
+        assert isinstance(superclass, lox_class.LoxClass) or superclass is None
+
         self.environment.define(statement.name.value, None)
 
         methods: dict[str, lox_function.LoxFunction] = {}
@@ -275,7 +288,7 @@ class Interpreter(
             )
             methods[method.name.value] = func
 
-        klass = lox_class.LoxClass(statement.name.value, methods)
+        klass = lox_class.LoxClass(statement.name.value, superclass, methods)
         self.environment.assign(statement.name, klass)
 
     def resolve(self, expression: ast._Expression, depth: int) -> None:
@@ -376,7 +389,7 @@ class Interpreter(
     # a workaround for Lark requiring mutable AST node objects and Python
     # needing immutable dict keys. This isn't ideal since IDs can be reused
     # once objects are garbage collected, but should be OK since the ID is
-    # used to keep track of local vars which are all held in memory at the
-    # same time.
+    # used to keep track of expression nodes which are all held in memory at
+    # the same time.
     def _obj_id(self, obj: ast._Expression) -> ObjId:
         return ObjId(id(obj))
