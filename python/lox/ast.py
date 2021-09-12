@@ -218,6 +218,15 @@ class This(_Expression):
 
 
 @dataclasses.dataclass()
+class Super(_Expression):
+    keyword: lark.Token
+    method: lark.Token
+
+    def accept(self, visitor: "visitor.ExpressionVisitor[T]") -> "T":
+        return visitor.visit_super_expression(self)
+
+
+@dataclasses.dataclass()
 class Grouping(_Expression):
     expression: _Expression
 

@@ -96,11 +96,12 @@ arguments: expression ( "," expression )*
         | this
         | "(" expression ")" -> grouping
         | variable
+        | _super_keyword "." IDENTIFIER -> super
 
 variable: IDENTIFIER
 
 !this: "this"
-
+!_super_keyword: "super"
 !_equality_operator: "!=" | "=="
 !_comparison_operator: ">" | ">=" | "<" | "<="
 !_addition_operator: "-" | "+"

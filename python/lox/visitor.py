@@ -93,3 +93,7 @@ class ExpressionVisitor(abc.ABC, typing.Generic[T]):
     @abc.abstractmethod
     def visit_this_expression(self, expression: ast.This) -> T:
         raise NotImplementedError
+
+    @abc.abstractmethod
+    def visit_super_expression(self, expression: ast.Super) -> T:
+        raise NotImplementedError
