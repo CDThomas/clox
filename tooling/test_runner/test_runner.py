@@ -28,7 +28,7 @@ def run_tests(interpreter_path: str, test_patterns: str) -> None:
 
     summary = _summarize(tests)
 
-    _print_results(tests, summary)
+    _print_summary(tests, summary)
 
     if summary.failed_count:
         sys.exit(1)
@@ -44,7 +44,11 @@ def _run_test(test_path: str, interpreter_path: str) -> Test:
         process.stdout, process.stderr, process.returncode, test_path
     )
 
-    return Test(path=test_path, failures=failures)
+    test = Test(path=test_path, failures=failures)
+
+    _print_test_result(test)
+
+    return test
 
 
 def _summarize(tests: list[Test]) -> Summary:
@@ -71,13 +75,16 @@ def _summary_text(summary: Summary) -> str:
         return f"{label_text} {passed_text}, {total_text}"
 
 
-def _print_results(tests: list[Test], summary: Summary) -> None:
-    for test in tests:
-        if test.failures:
-            print(term_style.red("F"), end="")
-        else:
-            print(term_style.green("."), end="")
+def _print_test_result(test: Test) -> None:
+    if test.failures:
+        print(term_style.red("F"), end="")
+    else:
+        print(term_style.green("."), end="")
 
+    sys.stdout.flush()
+
+
+def _print_summary(tests: list[Test], summary: Summary) -> None:
     failed_tests = [test for test in tests if test.failures]
 
     if failed_tests:
