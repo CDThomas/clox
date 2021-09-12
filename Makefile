@@ -85,52 +85,7 @@ test_clox: clox
 	test/precedence.lox
 
 test_pylox:
-	@poetry run test ./pylox \
-	test/assignment/associativity.lox \
-	test/assignment/global.lox \
-	test/assignment/local.lox \
-	test/assignment/syntax.lox \
-	test/assignment/undefined.lox \
-	"test/bool/*" \
-	"test/block/*" \
-	"test/call/*" \
-	"test/class/*" \
-	"test/closure/*" \
-	"test/comments/*" \
-	"test/constructor/*" \
-	"test/field/*" \
-	"test/for/*" \
-	"test/function/*" \
-	"test/if/*" \
-	"test/logical_operator/*" \
-	"test/method/*" \
-	"test/nil/*" \
-	test/number/literals.lox \
-	"test/operator/*" \
-	"test/return/*" \
-	test/string/literals.lox \
-	"test/this/*" \
-	test/variable/collide_with_parameter.lox \
-	test/variable/duplicate_local.lox \
-	test/variable/duplicate_parameter.lox \
-	test/variable/early_bound.lox \
-	test/variable/in_middle_of_block.lox \
-	test/variable/in_nested_block.lox \
-	test/variable/local_from_method.lox \
-	test/variable/scope_reuse_in_different_blocks.lox \
-	test/variable/shadow_and_local.lox \
-	test/variable/shadow_global.lox \
-	test/variable/shadow_local.lox \
-	test/variable/undefined_local.lox \
-	test/variable/redeclare_global.lox \
-	test/variable/redefine_global.lox \
-	test/variable/undefined_global.lox \
-	test/variable/uninitialized.lox \
-	test/variable/use_local_in_initializer.lox \
-	test/variable/use_global_in_initializer.lox \
-	"test/while/*" \
-	test/empty_file.lox \
-	test/precedence.lox
+	@./test_pylox.sh
 
 # Run tests for tooling.
 test_tooling:
