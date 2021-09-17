@@ -29,6 +29,7 @@ python -m tooling.test_runner.cli ./pylox_test_cmd.sh \
 	"test/for/*" \
 	"test/function/*" \
 	"test/if/*" \
+	"test/inheritance/*" \
 	"test/logical_operator/*" \
 	"test/method/*" \
 	"test/nil/*" \
@@ -36,6 +37,7 @@ python -m tooling.test_runner.cli ./pylox_test_cmd.sh \
 	"test/operator/*" \
 	"test/return/*" \
 	test/string/literals.lox \
+	"test/super/*" \
 	"test/this/*" \
 	test/variable/collide_with_parameter.lox \
 	test/variable/duplicate_local.lox \
