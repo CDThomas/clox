@@ -19,6 +19,7 @@ class FunctionType(enum.Enum):
 class ClassType(enum.Enum):
     NONE = enum.auto()
     CLASS = enum.auto()
+    SUBCLASS = enum.auto()
 
 
 class Resolver(
@@ -66,6 +67,7 @@ class Resolver(
             )
 
         if statement.superclass:
+            self.current_class = ClassType.SUBCLASS
             self.resolve(statement.superclass)
 
         if statement.superclass:
@@ -191,6 +193,17 @@ class Resolver(
         return None
 
     def visit_super_expression(self, expression: ast.Super) -> None:
+        if self.current_class == ClassType.NONE:
+            raise errors.LoxResolutionError(
+                expression.keyword, "Can't use 'super' outside of a class."
+            )
+
+        if self.current_class != ClassType.SUBCLASS:
+            raise errors.LoxResolutionError(
+                expression.keyword,
+                "Can't use 'super' in a class with no superclass.",
+            )
+
         self._resolve_local(expression, expression.keyword)
         return None
 
