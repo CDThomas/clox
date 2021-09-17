@@ -1,6 +1,6 @@
 # Lox
 
-This repo contains two implementations of the Lox language from [Crafting Interpreters](http://www.craftinginterpreters.com/).
+This repo contains two implementations of the [Lox language](http://www.craftinginterpreters.com/the-lox-language.html) from [Crafting Interpreters](http://www.craftinginterpreters.com/).
 
 The first implementation, [Pylox](#pylox), is a Python port of the tree-walk interpreter, Jlox, from [part two of the book](https://craftinginterpreters.com/a-tree-walk-interpreter.html).
 
@@ -38,6 +38,8 @@ $ make typecheck_pylox
 ```
 
 ## Clox
+
+⚠️ *WIP - this implementation of Clox is not complete yet and doesn't have all of the features of Lox*.
 
 Clox is lifted directly from the code in the book (apart from some minor differences in formatting). The source code is in the [`c`](./c) directory.
 
