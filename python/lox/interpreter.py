@@ -255,6 +255,28 @@ class Interpreter(
 
         return value
 
+    def visit_super_expression(
+        self, expression: ast.Super
+    ) -> typing.Optional[types.Value]:
+        distance = self.locals.get(self._obj_id(expression))
+        assert distance is not None
+
+        superclass = self.environment.get_at(distance, "super")
+        assert isinstance(superclass, lox_class.LoxClass)
+
+        obj = self.environment.get_at(distance - 1, "this")
+        assert isinstance(obj, lox_instance.LoxInstance)
+
+        method = superclass.find_method(expression.method.value)
+
+        if not method:
+            raise errors.LoxRuntimeError(
+                expression.method,
+                f"Undefined property '{expression.method.value}'.",
+            )
+
+        return method.bind(obj)
+
     def visit_this_expression(
         self, expression: ast.This
     ) -> typing.Optional[types.Value]:
@@ -281,6 +303,10 @@ class Interpreter(
 
         self.environment.define(statement.name.value, None)
 
+        if statement.superclass:
+            self.environment = environment.Environment(self.environment)
+            self.environment.define("super", superclass)
+
         methods: dict[str, lox_function.LoxFunction] = {}
         for method in statement.methods:
             func = lox_function.LoxFunction(
@@ -289,6 +315,11 @@ class Interpreter(
             methods[method.name.value] = func
 
         klass = lox_class.LoxClass(statement.name.value, superclass, methods)
+
+        if superclass:
+            assert self.environment.enclosing
+            self.environment = self.environment.enclosing
+
         self.environment.assign(statement.name, klass)
 
     def resolve(self, expression: ast._Expression, depth: int) -> None:

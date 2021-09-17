@@ -68,6 +68,10 @@ class Resolver(
         if statement.superclass:
             self.resolve(statement.superclass)
 
+        if statement.superclass:
+            self._begin_scope()
+            self.scopes[-1]["super"] = True
+
         self._begin_scope()
         self.scopes[-1]["this"] = True
 
@@ -81,6 +85,10 @@ class Resolver(
             self._resolve_function(method, declaration)
 
         self._end_scope()
+
+        if statement.superclass:
+            self._end_scope()
+
         self.current_class = enclosing_class
 
         return None
@@ -180,6 +188,10 @@ class Resolver(
     def visit_set_expression(self, expression: ast.Set) -> None:
         self.resolve(expression.value)
         self.resolve(expression.obj)
+        return None
+
+    def visit_super_expression(self, expression: ast.Super) -> None:
+        self._resolve_local(expression, expression.keyword)
         return None
 
     def visit_this_expression(self, expression: ast.This) -> None:
